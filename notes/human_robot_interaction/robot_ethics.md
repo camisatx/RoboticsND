@@ -55,3 +55,25 @@ We are likely to follow the perspective of legal responsibility because:
 - The legal framework provides a practical system for understanding agency and responsibility, so we will not need to wait for a final resolution of which moral theory is "right" or what moral agency "really is" in order to begin to address the ethical issues facing robotics.
 
 Real moral complexity comes from trying to resolve moral dilemmas; choices in which different perspectives on a situation would endorse making different decisions.
+
+### Robot-Environment Interactions
+
+It is important to identify and control environmental disturbing factors that jeopardize the normal working of robotic systems.
+
+A heuristic strategy that is often applied to address this relies on closed-world assumptions:
+- One models robotic behaviors in closed worlds that are predictable with known and well tested regularities
+- One attempts to enforce (in the environments in which the robots will be actually immersed) the easily predictable conditions of those ideal closed worlds
+
+This closed world heuristic is often used in industrial automation where either a robot "segregation" policy is enforced (isolate robots from people), or the interactions are rigidly regimented.
+
+These interactions will continue to be a large issue as more robots are introduced in non-industrial areas. This is important to control and understand because this is relevant to autonomy, responsibility and liability issues.
+
+*The environments in which robots are supposed to act become more dynamic and less readily predictable as one progressively moves from industrial robotics towards the current frontiers of service and personal robotics.*
+
+### Militarized Robots
+
+When is it alright for robots to be militarized?
+
+Soldiers must be able to recognize surrender gestures and be able to tell  bystanders apart from foes.
+
+If one knows that a system deployed in the battlefield is unable to discriminate between between the innocent and the enemy, then one no longer has a rational basis for distinguishing between the goals one pursues by deploying these robotic systems in the battlefield and their alleged side effects. The proposed criterion should be acceptable from consequentialist standpoints in ethics, too: while the killing of the innocent may bring short-term advantages in a war, it is likely to induce long-term resentments in the enemy, whose expected consequences should be properly taken into account in order to minimize the loss of human lives, the length of the conflict, etc.
