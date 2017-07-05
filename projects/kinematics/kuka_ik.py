@@ -132,6 +132,55 @@ roll = -0.0004
 pitch = 0.000232
 yaw = 0.00076
 
+Rrpy = rot_x(roll) * rot_y(pitch) * rot_z(yaw)
+#print(Rrpy)
+
+# Determine angle of EE
+#ee_rot = rot_x(roll) * rot_y(pitch) * rot_z(yaw)
+#print("EE angle = ", ee_rot)
+
+lx = Rrpy[0, 0]
+ly = Rrpy[1, 0]
+lz = Rrpy[2, 0]
+
+# Calculate the wrist center
+wx = px - (kuka_s[d6] + kuka_s[d7]) * lx
+wy = py - (kuka_s[d6] + kuka_s[d7]) * ly
+wz = pz - (kuka_s[d6] + kuka_s[d7]) * lz
+#print("wx:", wx, "; wy:", wy, "; wz:", wz)
+
+###############################################################################
+# Calculate joint angles using Geometric IK method
+
+# Joint 1 angle
+theta1 = atan2(wy, wx).evalf()
+theta1 = np.clip(theta1, -185 * dtr, 185 * dtr)
+
+#D0_WC = sqrt(wx**2 + wy**2)
+#X1_3 = D0_WC - kuka_s[a2]  # unsure which to use
+X1_3 = wx - kuka_s[a2]
+Z1_3 = wz - kuka_s[d1]
+
+# Theta 3 Calculation (using the law of cosines)
+#D = (X1_3**2 + Z1_3**2 - kuka_s[a3]**2 - kuka_s[a4]**2) / (2 * kuka_s[a3] * kuka_s[a4])    # Shoud this use a4 or d4?
+D = (X1_3**2 + Z1_3**2 - kuka_s[a3]**2 - kuka_s[d4]**2) / (2 * kuka_s[a3] * kuka_s[d4])
+
+# Check if D is greater than 1 to prevent imaginary numbers
+if abs(D) > 1:
+    D = 1
+    raise Warning("D for angle 3 is greater than 1")
+
+#theta3 = atan2(D, -sqrt(1 - D**2)).evalf()     # Is D first, or second?
+theta3 = atan2(-sqrt(1 - D**2), D).evalf()
+
+# Theta 2 Calculation
+S1 = ((kuka_s[a3] + kuka_s[d4] * cos(theta3)) * Z1_3 - kuka_s[d4] * sin(theta3) * X1_3) / (X1_3**2 + Z1_3**2)
+C1 = ((kuka_s[a3] + kuka_s[d4] * cos(theta3)) * X1_3 + kuka_s[d4] * sin(theta3) * Z1_3) / (X1_3**2 + Z1_3**2)
+theta2 = atan2(S1, C1).evalf()
+theta2 = np.clip(theta2, -45 * dtr, 85 * dtr)
+
+##############################################################################
+
 # Define Modified DH Transformation matrix
 T0_1 = build_mod_dh_matrix(s=kuka_s, theta=theta1, alpha=alpha1, d=d1, a=a1)
 T1_2 = build_mod_dh_matrix(s=kuka_s, theta=theta2, alpha=alpha2, d=d2, a=a2)
@@ -143,7 +192,7 @@ T6_G = build_mod_dh_matrix(s=kuka_s, theta=theta7, alpha=alpha7, d=d7, a=a7)
 
 # Create individual transformation matrices
 T0_2 = simplify(T0_1 * T1_2)    # base link to link 2
-T0_3 = simplify(T0_2 * T2_3)    # bawe link to link 3
+T0_3 = simplify(T0_2 * T2_3)    # base link to link 3
 T0_4 = simplify(T0_3 * T3_4)    # base link to link 4
 T0_5 = simplify(T0_4 * T4_5)    # base link to link 5
 T0_6 = simplify(T0_5 * T5_6)    # base link to link 6
@@ -175,55 +224,11 @@ T_total = simplify(T0_G * R_corr)
 #print('T6_G = ', T0_G.evalf(subs={theta1: 0, theta2: 0, theta3: 0, theta4: 0, theta5: 0, theta6:0}))
 #print('T_total = ', T_total.evalf(subs={theta1: 0, theta2: 0, theta3: 0, theta4: 0, theta5: 0, theta6:0}))
 
-Rrpy = rot_x(roll) * rot_y(pitch) * rot_z(yaw)
-print(Rrpy)
 
-# Determine angle of EE
-#ee_rot = rot_x(roll) * rot_y(pitch) * rot_z(yaw)
-#print("EE angle = ", ee_rot)
-
-lx = Rrpy[0, 0]
-ly = Rrpy[1, 0]
-lz = Rrpy[2, 0]
-
-# Calculate the wrist center
-wx = px - (kuka_s[d6] + kuka_s[d7]) * lx
-wy = py - (kuka_s[d6] + kuka_s[d7]) * ly
-wz = pz - (kuka_s[d6] + kuka_s[d7]) * lz
-#print("wx:", wx, "; wy:", wy, "; wz:", wz)
-
-##############################################################################
-# Calculate joint angles using Geometric IK method
-
-# Joint 1 angle
-theta1 = atan2(wy, wx).evalf()
-theta1 = np.clip(theta1, -185 * dtr, 185 * dtr)
-
-#D0_WC = sqrt(wx**2 + wy**2)
-#X1_3 = D0_WC - kuka_s[a2]  # unsure which to use
-X1_3 = wx - kuka_s[a2]
-Z1_3 = wz - kuka_s[d1]
-
-# Theta 3 Calculation (using the law of cosines)
-#D = (X1_3**2 + Z1_3**2 - kuka_s[a3]**2 - kuka_s[a4]**2) / (2 * kuka_s[a3] * kuka_s[a4])    # Shoud this use a4 or d4?
-D = (X1_3**2 + Z1_3**2 - kuka_s[a3]**2 - kuka_s[d4]**2) / (2 * kuka_s[a3] * kuka_s[d4])
-
-# Check if D is greater than 1 to prevent imaginary numbers
-if abs(D) > 1:
-    D = 1
-    raise Warning("D for angle 3 is greater than 1")
-
-#theta3 = atan2(D, -sqrt(1 - D**2)).evalf()     # Is D first, or second?
-theta3 = atan2(-sqrt(1 - D**2), D).evalf()
-
-# Theta 2 Calculation
-S1 = ((kuka_s[a3] + kuka_s[d4] * cos(theta3)) * Z1_3 - kuka_s[d4] * sin(theta3) * X1_3) / (X1_3**2 + Z1_3**2)
-C1 = ((kuka_s[a3] + kuka_s[d4] * cos(theta3)) * X1_3 + kuka_s[d4] * sin(theta3) * Z1_3) / (X1_3**2 + Z1_3**2)
-theta2 = atan2(S1, C1).evalf()
-theta2 = np.clip(theta2, -45 * dtr, 85 * dtr)
-
+###############################################################################
 # Calculate wrist rotation
-R0_3 = T0_3.evalf(subs={theta1: theta1, theta2: theta2, theta3: theta3})[0:3,0:3]
+#R0_3 = T0_3.evalf(subs={theta1: theta1, theta2: theta2, theta3: theta3})[0:3,0:3]
+R0_3 = (T0_1 * T1_2 * T2_3).evalf(subs={theta1: theta1, theta2: theta2, theta3: theta3})[0:3,0:3]
 R3_6 = R0_3.inv() * Rrpy
 
 r31 = R3_6[2, 0]
@@ -233,15 +238,15 @@ r32 = R3_6[2, 1]
 r33 = R3_6[2, 2]
 
 # Joing 4 Calculation
-theta4 = (atan2(r32, r33)).evalf()
+theta4 = atan2(r32, r33).evalf()
 theta4 = np.clip(theta4, -350 * dtr, 350 * dtr)
 
 # Joint 5 Calculation
-theta5 = (atan2(-r31, sqrt(pow(r11, 2) + pow(r21, 2)))).evalf()
+theta5 = atan2(-r31, sqrt(pow(r11, 2) + pow(r21, 2))).evalf()
 theta5 = np.clip(theta5, -125 * dtr, 125 * dtr)
 
 # Joint 6 Calculation
-theta6 = (atan2(r21, r11)).evalf()
+theta6 = atan2(r21, r11).evalf()
 theta6 = np.clip(theta6, -350 * dtr, 350 * dtr)
 
 print(theta1)
