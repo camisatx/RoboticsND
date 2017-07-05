@@ -1,6 +1,6 @@
 import math
-import numpy
-from sympy import symbols, cos, sin, pi, atan2, acos, sqrt, simplify
+import numpy as np
+from sympy import symbols, cos, sin, pi, atan2, sqrt, simplify
 from sympy.matrices import Matrix
 
 """
@@ -11,28 +11,50 @@ FK(thetas) -> pose
 IK(pose) -> thetas
 """
 
+
+def build_mod_dh_matrix(s, theta, alpha, d, a):
+    """Build the modified DH transformation matrix based on the provided
+    theta, alpha, d and a values.
+
+    :param s: Dictionary of DH parameters for the manipulator
+    :param theta: Sympy symbol
+    :param alpha: Sympy symbol
+    :param d: Sympy symbol
+    :param a: Sympy symbol
+    :return: Sympy Matrix object of the DH transformation matrix
+    """
+    # Create the transformation matrix template
+    Ta_b = Matrix([[            cos(theta),           -sin(theta),           0,             a],
+                   [ sin(theta)*cos(alpha), cos(theta)*cos(alpha), -sin(alpha), -sin(alpha)*d],
+                   [ sin(theta)*sin(alpha), cos(theta)*sin(alpha),  cos(alpha),  cos(alpha)*d],
+                   [                     0,                     0,           0,             1]])
+    # Substitute in the DH parameters into the matrix
+    Ta_b = Ta_b.subs(s)
+    return Ta_b
+
+
 def quaternion_matrix(quaternion):
     """Return homogeneous rotation matrix from quaternion.
 
     >>> M = quaternion_matrix([0.99810947, 0.06146124, 0, 0])
-    >>> numpy.allclose(M, rotation_matrix(0.123, [1, 0, 0]))
+    >>> np.allclose(M, rotation_matrix(0.123, [1, 0, 0]))
     True
     >>> M = quaternion_matrix([1, 0, 0, 0])
-    >>> numpy.allclose(M, numpy.identity(4))
+    >>> np.allclose(M, np.identity(4))
     True
     >>> M = quaternion_matrix([0, 1, 0, 0])
-    >>> numpy.allclose(M, numpy.diag([1, -1, -1, 1]))
+    >>> np.allclose(M, np.diag([1, -1, -1, 1]))
     True
 
     """
-    _EPS = numpy.finfo(float).eps * 4.0
-    q = numpy.array(quaternion, dtype=numpy.float64, copy=True)
-    n = numpy.dot(q, q)
+    _EPS = np.finfo(float).eps * 4.0
+    q = np.array(quaternion, dtype=np.float64, copy=True)
+    n = np.dot(q, q)
     if n < _EPS:
-        return numpy.identity(4)
+        return np.identity(4)
     q *= math.sqrt(2.0 / n)
-    q = numpy.outer(q, q)
-    return numpy.array([
+    q = np.outer(q, q)
+    return np.array([
         [1.0-q[2, 2]-q[3, 3],     q[1, 2]-q[3, 0],     q[1, 3]+q[2, 0], 0.0],
         [    q[1, 2]+q[3, 0], 1.0-q[1, 1]-q[3, 3],     q[2, 3]-q[1, 0], 0.0],
         [    q[1, 3]-q[2, 0],     q[2, 3]+q[1, 0], 1.0-q[1, 1]-q[2, 2], 0.0],
@@ -59,6 +81,8 @@ def rot_z(q):
                   [       0,       0,       1]])
     return R_z
 
+rtd = 180 / np.pi
+dtr = np.pi / 180
 
 # Define DH param symbols
 theta1, theta2, theta3, theta4, theta5, theta6, theta7 = symbols('theta1:8')
@@ -93,7 +117,6 @@ kuka_s = {alpha1:     0, d1:  0.75, a1:      0,
 #roll = 0.0
 #pitch = 0.0
 #yaw = 0.0
-#w = 0
 
 #px = 1.5
 #py = -0.3
@@ -101,7 +124,6 @@ kuka_s = {alpha1:     0, d1:  0.75, a1:      0,
 #roll = -0.299
 #pitch = -0.322
 #yaw = -0.635
-#w = 0.634
 
 px = -0.209973
 py = 2.4999
@@ -109,86 +131,122 @@ pz = 1.600
 roll = -0.0004
 pitch = 0.000232
 yaw = 0.00076
-w = 1
 
-Rrpy = quaternion_matrix([px, py, pz, w])
+# Define Modified DH Transformation matrix
+T0_1 = build_mod_dh_matrix(s=kuka_s, theta=theta1, alpha=alpha1, d=d1, a=a1)
+T1_2 = build_mod_dh_matrix(s=kuka_s, theta=theta2, alpha=alpha2, d=d2, a=a2)
+T2_3 = build_mod_dh_matrix(s=kuka_s, theta=theta3, alpha=alpha3, d=d3, a=a3)
+T3_4 = build_mod_dh_matrix(s=kuka_s, theta=theta4, alpha=alpha4, d=d4, a=a4)
+T4_5 = build_mod_dh_matrix(s=kuka_s, theta=theta5, alpha=alpha5, d=d5, a=a5)
+T5_6 = build_mod_dh_matrix(s=kuka_s, theta=theta6, alpha=alpha6, d=d6, a=a6)
+T6_G = build_mod_dh_matrix(s=kuka_s, theta=theta7, alpha=alpha7, d=d7, a=a7)
+
+# Create individual transformation matrices
+T0_2 = simplify(T0_1 * T1_2)    # base link to link 2
+T0_3 = simplify(T0_2 * T2_3)    # bawe link to link 3
+T0_4 = simplify(T0_3 * T3_4)    # base link to link 4
+T0_5 = simplify(T0_4 * T4_5)    # base link to link 5
+T0_6 = simplify(T0_5 * T5_6)    # base link to link 6
+T0_G = simplify(T0_6 * T6_G)    # base link to gripper
+
+# Correction to account for orientation difference between definition of gripper link in
+#   URDF file and the DH convention.
+#   (rotation around Z axis by 180 deg and X axis by -90 deg)
+R_z = Matrix([[     cos(pi), -sin(pi),          0, 0],
+              [     sin(pi),  cos(pi),          0, 0],
+              [           0,        0,          1, 0],
+              [           0,        0,          0, 1]])
+R_y = Matrix([[  cos(-pi/2),        0, sin(-pi/2), 0],
+              [           0,        1,          0, 0],
+              [ -sin(-pi/2),        0, cos(-pi/2), 0],
+              [           0,        0,          0, 1]])
+R_corr = simplify(R_z * R_y)
+
+# Total homogeneous transform between base and gripper with orientation correction applied
+T_total = simplify(T0_G * R_corr)
+
+# Numerically evaluate transforms (compare this with output of tf_echo)
+#print('T0_1 = ', T0_1.evalf(subs={theta1: 0, theta2: 0, theta3: 0, theta4: 0, theta5: 0, theta6:0}))
+#print('T1_2 = ', T0_2.evalf(subs={theta1: 0, theta2: 0, theta3: 0, theta4: 0, theta5: 0, theta6:0}))
+#print('T2_3 = ', T0_3.evalf(subs={theta1: 0, theta2: 0, theta3: 0, theta4: 0, theta5: 0, theta6:0}))
+#print('T3_4 = ', T0_4.evalf(subs={theta1: 0, theta2: 0, theta3: 0, theta4: 0, theta5: 0, theta6:0}))
+#print('T4_5 = ', T0_5.evalf(subs={theta1: 0, theta2: 0, theta3: 0, theta4: 0, theta5: 0, theta6:0}))
+#print('T5_6 = ', T0_6.evalf(subs={theta1: 0, theta2: 0, theta3: 0, theta4: 0, theta5: 0, theta6:0}))
+#print('T6_G = ', T0_G.evalf(subs={theta1: 0, theta2: 0, theta3: 0, theta4: 0, theta5: 0, theta6:0}))
+#print('T_total = ', T_total.evalf(subs={theta1: 0, theta2: 0, theta3: 0, theta4: 0, theta5: 0, theta6:0}))
+
+Rrpy = rot_x(roll) * rot_y(pitch) * rot_z(yaw)
 print(Rrpy)
 
 # Determine angle of EE
-ee_rot = rot_x(roll) * rot_y(pitch) * rot_z(yaw)
-print("EE angle = ", ee_rot)
+#ee_rot = rot_x(roll) * rot_y(pitch) * rot_z(yaw)
+#print("EE angle = ", ee_rot)
 
-# EE correction
-ee_corr_y = Matrix([[  cos(-pi/2),        0, sin(-pi/2), 0],
-                    [           0,        1,          0, 0],
-                    [ -sin(-pi/2),        0, cos(-pi/2), 0],
-                    [           0,        0,          0, 1]])
-ee_corr_z = Matrix([[     cos(pi), -sin(pi),          0, 0],
-                    [     sin(pi),  cos(pi),          0, 0],
-                    [           0,        0,          1, 0],
-                    [           0,        0,          0, 1]])
-ee_corr = simplify(ee_corr_z * ee_corr_y)
-print("EE correction = ", ee_corr)
-
-# Get the Z axis vector for the gripper
-ee_z = [Rrpy[0][0], Rrpy[1][0], Rrpy[2][0], 0]
-
-#L_x = np.cos(roll) * np.cos(pitch)
-#L_y = np.cos(roll) * np.sin(pitch) * np.sin(yaw) - np.sin(roll) * np.cos(yaw)
-#L_z = np.cos(roll) * np.sin(pitch) * np.cos(yaw) + np.sin(roll) * np.sin(yaw)
+lx = Rrpy[0, 0]
+ly = Rrpy[1, 0]
+lz = Rrpy[2, 0]
 
 # Calculate the wrist center
-w_c = [px - kuka_s[d7] * ee_z[0],
-       py - kuka_s[d7] * ee_z[1],
-       pz - kuka_s[d7] * ee_z[2]]
-print('Wrist center = ', w_c)
+wx = px - (kuka_s[d6] + kuka_s[d7]) * lx
+wy = py - (kuka_s[d6] + kuka_s[d7]) * ly
+wz = pz - (kuka_s[d6] + kuka_s[d7]) * lz
+#print("wx:", wx, "; wy:", wy, "; wz:", wz)
 
+##############################################################################
 # Calculate joint angles using Geometric IK method
-theta1 = atan2(w_c[2], w_c[0])
 
-X1_3 = w_c[0] - kuka_s[a2]
-Z1_3 = w_c[2] - kuka_s[d1]
+# Joint 1 angle
+theta1 = atan2(wy, wx).evalf()
+theta1 = np.clip(theta1, -185 * dtr, 185 * dtr)
 
-r0 = sqrt(X1_3**2 + Z1_3**2)
-print((kuka_s[a4]**2 - kuka_s[a3]**2 - r0**2) / (-2 * kuka_s[a3] * r0))
-print((kuka_s[a4]**2 - kuka_s[a3]**2 - r0**2))
-print((-2 * kuka_s[a3] * r0))
-phi1 = acos((kuka_s[a4]**2 - kuka_s[a3]**2 - r0**2) / (-2 * kuka_s[a3] * r0))
+#D0_WC = sqrt(wx**2 + wy**2)
+#X1_3 = D0_WC - kuka_s[a2]  # unsure which to use
+X1_3 = wx - kuka_s[a2]
+Z1_3 = wz - kuka_s[d1]
 
-phi2 = atan2(Z1_3, X1_3)
-theta2 = phi2 - phi1
+# Theta 3 Calculation (using the law of cosines)
+#D = (X1_3**2 + Z1_3**2 - kuka_s[a3]**2 - kuka_s[a4]**2) / (2 * kuka_s[a3] * kuka_s[a4])    # Shoud this use a4 or d4?
+D = (X1_3**2 + Z1_3**2 - kuka_s[a3]**2 - kuka_s[d4]**2) / (2 * kuka_s[a3] * kuka_s[d4])
 
-#phi3 = acos((r1**2 - kuka_s[a3]**2 - kuka_s[a4]**2) / (-2 * kuka_s[a3] * kuka_s[a4]))
-#theta3 = pi - phi3
+# Check if D is greater than 1 to prevent imaginary numbers
+if abs(D) > 1:
+    D = 1
+    raise Warning("D for angle 3 is greater than 1")
 
-print(X1_3)
-print(Z1_3)
-print(r0)
-print(phi1)
-print(phi2)
-print('____________')
+#theta3 = atan2(D, -sqrt(1 - D**2)).evalf()     # Is D first, or second?
+theta3 = atan2(-sqrt(1 - D**2), D).evalf()
 
-###################################
-r1 = sqrt(kuka_s[a4]**2 + kuka_s[a5]**2)
-r2 = sqrt(w_c[0]**2 + w_c[1]**2)
+# Theta 2 Calculation
+S1 = ((kuka_s[a3] + kuka_s[d4] * cos(theta3)) * Z1_3 - kuka_s[d4] * sin(theta3) * X1_3) / (X1_3**2 + Z1_3**2)
+C1 = ((kuka_s[a3] + kuka_s[d4] * cos(theta3)) * X1_3 + kuka_s[d4] * sin(theta3) * Z1_3) / (X1_3**2 + Z1_3**2)
+theta2 = atan2(S1, C1).evalf()
+theta2 = np.clip(theta2, -45 * dtr, 85 * dtr)
 
-#cos_phi2 = (r1**2 - kuka_s[a2]**2 - r2**2) / (-2 * kuka_s[a2] * r2)
+# Calculate wrist rotation
+R0_3 = T0_3.evalf(subs={theta1: theta1, theta2: theta2, theta3: theta3})[0:3,0:3]
+R3_6 = R0_3.inv() * Rrpy
 
-#phi1 = atan2(kuka_s[a4], kuka_s[d4])
-#phi2 = atan2(sqrt(1 - cos_phi2**2), cos_phi2)
-#phi3 = atan2(py, px)
-#phi4 = (r2**2 - kuka_s[a2]**2 - r1**2) / (-2 * kuka_s[a2] * r1)
+r31 = R3_6[2, 0]
+r11 = R3_6[0, 0]
+r21 = R3_6[1, 0]
+r32 = R3_6[2, 1]
+r33 = R3_6[2, 2]
 
-#theta2 = phi2 + phi3
-#theta3 = phi4 - phi1 - pi/2
+# Joing 4 Calculation
+theta4 = (atan2(r32, r33)).evalf()
+theta4 = np.clip(theta4, -350 * dtr, 350 * dtr)
 
-#####################################
-#cos_theta3 = (X1_3**2 + Z1_3**2 - kuka_s[a3]**2 - kuka_s[a4]**2) / (2 * kuka_s[a3] * kuka_s[a4])
-#theta3 = atan2(cos_theta3, sqrt(1 - cos_theta3**2))
-theta3 = acos((X1_3**2 + Z1_3**2 - kuka_s[a3]**2 - kuka_s[a4]**2) / (2 * kuka_s[a3] * kuka_s[a4]))
+# Joint 5 Calculation
+theta5 = (atan2(-r31, sqrt(pow(r11, 2) + pow(r21, 2)))).evalf()
+theta5 = np.clip(theta5, -125 * dtr, 125 * dtr)
 
-theta4, theta5, theta6 = 0, 0, 0
+# Joint 6 Calculation
+theta6 = (atan2(r21, r11)).evalf()
+theta6 = np.clip(theta6, -350 * dtr, 350 * dtr)
 
 print(theta1)
 print(theta2)
 print(theta3)
+print(theta4)
+print(theta5)
+print(theta6)
