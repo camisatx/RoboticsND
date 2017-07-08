@@ -10,6 +10,7 @@
 # Author: Harsh Pandya
 
 # Import modules
+import numpy as np
 import rospy
 import tf
 from kuka_arm.srv import *
@@ -31,113 +32,173 @@ def handle_calculate_IK(req):
             # IK code starts here
             joint_trajectory_point = JointTrajectoryPoint()
 
-            # Define DH param symbols
-
-            # Define joint angle symbols
-            theta1, theta2, theta3, theta4, theta5, theta6 = symbols('theta1:7')
-            alpha1, alpha2, alpha3, alpha4, alpha5, alpha6, alpha7 = symbols('alpha1:8')
-            d1, d2, d3, d4, d5, d6, d7 = symbols('d1:d8')    # link offsets
-            a1, a2, a3, a4, a5, a6, a7 = symbols('a1:a8')    # link lengths
-
-            # Modified DH params
-            s = {theta1: theta1, alpha1:   0, d1: d1, a1: a1,
-                 theta2: theta2, alpha2: -90, d2:  0, a2: a2,
-	         theta3: theta3, alpha3:   0, d3:  0, a3: a3,
-	         theta4: theta4, alpha4: -90, d4: d4, a4:  0,
-		 theta5: theta5, alpha5:  90, d5:  0, a5:  0,
-		 theta6: theta6, alpha6: -90, d6: d6, a6:  0}
-
-            # Define Modified DH Transformation matrix
-            T0_1 = Matrix([[             cos(q1),            -sin(q1),            0,              a1],
-                           [ sin(q1)*cos(alpha1), cos(q1)*cos(alpha1), -sin(alpha1), -sin(alpha1)*d1],
-                           [ sin(q1)*sin(alpha1), cos(q1)*sin(alpha1),  cos(alpha1),  cos(alpha1)*d1],
-                           [                   0,                   0,            0,               1]])
-            T0_1 = T0_1.subs(s)
-
-            T1_2 = Matrix([[             cos(q2),            -sin(q2),            0,              a2],
-                           [ sin(q2)*cos(alpha2), cos(q2)*cos(alpha2), -sin(alpha2), -sin(alpha2)*d2],
-                           [ sin(q2)*sin(alpha2), cos(q2)*sin(alpha2),  cos(alpha2),  cos(alpha2)*d2],
-                           [                   0,                   0,            0,               1]])
-            T1_2 = T1_2.subs(s)
-
-            T2_3 = Matrix([[             cos(q3),            -sin(q3),            0,              a3],
-                           [ sin(q3)*cos(alpha3), cos(q3)*cos(alpha3), -sin(alpha3), -sin(alpha3)*d3],
-                           [ sin(q3)*sin(alpha3), cos(q3)*sin(alpha3),  cos(alpha3),  cos(alpha3)*d3],
-                           [                   0,                   0,            0,               1]])
-            T2_3 = T2_3.subs(s)
-
-            T3_4 = Matrix([[             cos(q4),            -sin(q4),            0,              a4],
-                           [ sin(q4)*cos(alpha4), cos(q4)*cos(alpha4), -sin(alpha4), -sin(alpha4)*d4],
-                           [ sin(q4)*sin(alpha4), cos(q4)*sin(alpha4),  cos(alpha4),  cos(alpha4)*d4],
-                           [                   0,                   0,            0,               1]])
-            T3_4 = T3_4.subs(s)
-
-            T4_5 = Matrix([[             cos(q5),            -sin(q5),            0,              a5],
-                           [ sin(q5)*cos(alpha5), cos(q5)*cos(alpha5), -sin(alpha5), -sin(alpha5)*d5],
-                           [ sin(q5)*sin(alpha5), cos(q5)*sin(alpha5),  cos(alpha5),  cos(alpha5)*d5],
-                           [                   0,                   0,            0,               1]])
-            T4_5 = T4_5.subs(s)
-
-            T5_6 = Matrix([[             cos(q6),            -sin(q6),            0,              a6],
-                           [ sin(q6)*cos(alpha6), cos(q6)*cos(alpha6), -sin(alpha6), -sin(alpha6)*d6],
-                           [ sin(q6)*sin(alpha6), cos(q6)*sin(alpha6),  cos(alpha6),  cos(alpha6)*d6],
-                           [                   0,                   0,            0,               1]])
-            T5_6 = T5_6.subs(s)
-
-            T6_G = Matrix([[             cos(q7),            -sin(q7),            0,              a6],
-                           [ sin(q7)*cos(alpha7), cos(q7)*cos(alpha7), -sin(alpha7), -sin(alpha7)*d7],
-                           [ sin(q7)*sin(alpha7), cos(q7)*sin(alpha7),  cos(alpha7),  cos(alpha7)*d7],
-                           [                   0,                   0,            0,               1]])
-            T6_G = T6_G.subs(s)
-
-            # Create individual transformation matrices
-            T0_2 = simplify(T0_1 * T1_2)    # base link to link 2
-            T0_3 = simplify(T0_2 * T2_3)    # base link to link 3
-            T0_4 = simplify(T0_3 * T3_4)    # base link to link 4
-            T0_5 = simplify(T0_4 * T4_5)    # base link to link 5
-            T0_6 = simplify(T0_5 * T5_6)    # base link to link 6
-            T0_G = simplify(T0_6 * T6_G)    # base link to gripper
-
-            # Correction to account for orientation difference between definition of gripper link in
-            #   URDF file and the DH convention.
-            #   (rotation around Z axis by 180 deg and X axis by -90 deg)
-            R_z = Matrix([[     cos(pi), -sin(pi),          0, 0],
-                          [     sin(pi),  cos(pi),          0, 0],
-                          [           0,        0,          1, 0],
-                          [           0,        0,          0, 1]])
-            R_y = Matrix([[  cos(-pi/2),        0, sin(-pi/2), 0],
-                          [           0,        1,          0, 0],
-                          [ -sin(-pi/2),        0, cos(-pi/2), 0],
-                          [           0,        0,          0, 1]])
-            R_corr = simplify(R_z * R_y)
+            """
+            Test file for building the Kuka 6 DoF manipulator's forward and inverse
+            kinematic code.
             
-            # Total homogeneous transform between base and gripper with orientation correction applied
-            T_total = simplify(T0_G * R_corr)
+            FK(thetas) -> pose
+            IK(pose) -> thetas
+            """
 
-            # Numerically evaluate transforms (compare this with output of tf_echo)
-            print('T0_1 = ', T0_1.evalf(subs={q1: 0, q2: 0, q3: 0, q4: 0, q5: 0, q6:0}))
-            print('T1_2 = ', T0_1.evalf(subs={q1: 0, q2: 0, q3: 0, q4: 0, q5: 0, q6:0}))
-            print('T2_3 = ', T0_1.evalf(subs={q1: 0, q2: 0, q3: 0, q4: 0, q5: 0, q6:0}))
-            print('T3_4 = ', T0_1.evalf(subs={q1: 0, q2: 0, q3: 0, q4: 0, q5: 0, q6:0}))
-            print('T4_5 = ', T0_1.evalf(subs={q1: 0, q2: 0, q3: 0, q4: 0, q5: 0, q6:0}))
-            print('T5_6 = ', T0_1.evalf(subs={q1: 0, q2: 0, q3: 0, q4: 0, q5: 0, q6:0}))
-            print('T6_G = ', T0_1.evalf(subs={q1: 0, q2: 0, q3: 0, q4: 0, q5: 0, q6:0}))
-
-            # Extract end-effector position and orientation from request
-            # px,py,pz = end-effector position
-            # roll, pitch, yaw = end-effector orientation
+            def build_mod_dh_matrix(s, theta, alpha, d, a):
+                """Build the modified DH transformation matrix based on the provided
+                theta, alpha, d and a values.
+            
+                :param s: Dictionary of DH parameters for the manipulator
+                :param theta: Sympy symbol
+                :param alpha: Sympy symbol
+                :param d: Sympy symbol
+                :param a: Sympy symbol
+                :return: Sympy Matrix object of the DH transformation matrix
+                """
+                # Create the transformation matrix template
+                Ta_b = Matrix([[            cos(theta),           -sin(theta),           0,             a],
+                               [ sin(theta)*cos(alpha), cos(theta)*cos(alpha), -sin(alpha), -sin(alpha)*d],
+                               [ sin(theta)*sin(alpha), cos(theta)*sin(alpha),  cos(alpha),  cos(alpha)*d],
+                               [                     0,                     0,           0,             1]])
+                # Substitute in the DH parameters into the matrix
+                Ta_b = Ta_b.subs(s)
+                return Ta_b
+            
+            
+            def rot_x(q):
+                r_x = Matrix([[ 1,      0,       0],
+                              [ 0, cos(q), -sin(q)],
+                              [ 0, sin(q),  cos(q)]])
+                return r_x
+            
+            
+            def rot_y(q):
+                r_y = Matrix([[  cos(q), 0, sin(q)],
+                              [       0, 1,      0],
+                              [ -sin(q), 0, cos(q)]])
+                return r_y
+            
+            
+            def rot_z(q):
+                r_z = Matrix([[ cos(q), -sin(q), 0],
+                              [ sin(q),  cos(q), 0],
+                              [      0,       0, 1]])
+                return r_z
+            
+            # Conversion factors between radians and degrees
+            rtd = 180 / pi
+            dtr = pi / 180
+            
+            # Define DH parameter symbols
+            theta1, theta2, theta3, theta4, theta5, theta6, theta7 = symbols('theta1:8')
+            alpha0, alpha1, alpha2, alpha3, alpha4, alpha5, alpha6 = symbols('alpha0:7')
+            d1, d2, d3, d4, d5, d6, d7 = symbols('d1:8')    # link offsets
+            a0, a1, a2, a3, a4, a5, a6 = symbols('a0:7')    # link lengths
+            
+            # Modified DH params for KUKA KR210
+            s = {alpha0:     0, d1:  0.75, a0:      0,
+                 alpha1: -pi/2, d2:     0, a1:   0.35, theta2: (theta2 - pi/2),
+                 alpha2:     0, d3:     0, a2:   1.25,
+                 alpha3: -pi/2, d4:  1.50, a3: -0.054,
+                 alpha4:  pi/2, d5:     0, a4:      0,
+                 alpha5: -pi/2, d6:     0, a5:      0,
+                 alpha6:     0, d7: 0.303, a6:      0, theta7: 0}
+            
+            # EE location and orientation
             px = req.poses[x].position.x
             py = req.poses[x].position.y
             pz = req.poses[x].position.z
             (roll, pitch, yaw) = tf.transformations.euler_from_quaternion(
                 [req.poses[x].orientation.x, req.poses[x].orientation.y,
                  req.poses[x].orientation.z, req.poses[x].orientation.w])
-
-            # Calculate joint angles using Geometric IK method
-            t = arctan()
+            
+            # Test pose & orientation of end effector w/ all angles at 0 degrees
+            #px = 2.1529
+            #py = 0.0
+            #pz = 1.9465
+            #roll = 0.0
+            #pitch = 0.0
+            #yaw = 0.0
+            
+            ###################################################################
+            # Step 1: Convert pose and orientation into a transformation matrix
+            #   to compute the wrist center
+            
+            # Build EE roation matrix
+            Rrpy = rot_x(roll) * rot_y(pitch) * rot_z(yaw)
+            lx = Rrpy[0, 0]
+            ly = Rrpy[1, 0]
+            lz = Rrpy[2, 0]
+            
+            # Calculate the wrist center (test should be (1.85, 0, 1.947)
+            wx = px - (s[d7] + s[d6]) * lx
+            wy = py - (s[d7] + s[d6]) * ly
+            wz = pz - (s[d7] + s[d6]) * lz
+            #print(wx, wy, wz)
+            
+            ###################################################################
+            # Step 2: Calculate thetas for joint 1, 2 and 3 (determines EE pos)
+            
+            theta1 = atan2(wy, wx).evalf()
+            theta1 = np.clip(theta1, -185*dtr, 185*dtr)
+            #print('theta1: %s' % theta1)
+            
+            # Calculation from graph 1
+            #r1 = sqrt(s[a2]**2 + s[d4]**2)
+            #r2 = sqrt(sqrt(wx**2 + wy**2)**2 + wz**2)
+            #phi1 = atan2(s[a2], s[d4])
+            #cos_phi4 = (r2**2 - s[a1]**2 - r1**2) / (-2 * s[a1] * r1)
+            #phi4 = atan2(sqrt(1 - cos_phi4**2), cos_phi4)
+            #theta3 = (phi4 - phi1 - pi/2).evalf()
+            ##theta3 = (phi4 - phi1).evalf()
+            #print('graph_1 theta3: %s' % theta3)
+            
+            X1_3 = wx - s[a2]
+            Y1_3 = wy - s[d1]
+            Z1_3 = wz - s[d1]
+            
+            r1 = sqrt(X1_3**2 + Z1_3**2)
+            #r1 = sqrt(X1_3**2 + Y1_3**2)
+            #r1 = sqrt(sqrt(wx**2 + wz**2) + wy**2)
+            cos_phi3 = (r1**2 - s[a2]**2 - s[d4]**2) / (-2 * s[a2] * s[d4])
+            phi3 = atan2(sqrt(1 - cos_phi3**2), cos_phi3)
+            theta3 = (pi - phi3).evalf()
+            #print('robogrok theta3: %s' % theta3)
+            
+            cos_phi1 = (s[d4]**2 - s[a2]**2 - r1**2) / (-2 * s[a2] * r1)
+            phi1 = atan2(sqrt(1 - cos_phi1**2), cos_phi1)
+            phi2 = atan2(Z1_3, X1_3)
+            theta2 = phi2 - phi1
+            #print('robogrok theta2: %s' % theta2)
+            
+            ###################################################################
+            # Step 3: Determine the rotation matrix for the spherical wrist joints
+            
+            # Build the transformation matrices of the first 3 joints
+            T0_1 = build_mod_dh_matrix(s=s, theta=theta1, alpha=alpha0, d=d1, a=a0)
+            T1_2 = build_mod_dh_matrix(s=s, theta=theta2, alpha=alpha1, d=d2, a=a1)
+            T2_3 = build_mod_dh_matrix(s=s, theta=theta3, alpha=alpha2, d=d3, a=a2)
+            
+            # Rotation matrix of the first three joints
+            R0_3 = (T0_1 * T1_2 * T2_3).evalf(subs={theta1: theta1,
+                                                    theta2: theta2,
+                                                    theta3: theta3})[0:3, 0:3]
+            
+            # Calculate the symbolic rotation matrix of the spherical wrist joints
+            R3_6 = R0_3.inv() * Rrpy
+            
+            ###################################################################
+            # Step 4: Calculate the spherical wrist joint angles
+            
+            r31 = R3_6[2, 0]
+            r11 = R3_6[0, 0]
+            r21 = R3_6[1, 0]
+            r32 = R3_6[2, 1]
+            r33 = R3_6[2, 2]
+            
+            theta4 = atan2(r32, r33).evalf()
+            
+            theta5 = atan2(-r31, sqrt(r11**2 + r21**2)).evalf()
+            
+            theta6 = atan2(r21, r11).evalf()
 
             # Populate response for the IK request
-            # In the next line replace theta1,theta2...,theta6 by your joint angle variables
             joint_trajectory_point.positions = [theta1, theta2, theta3, theta4, theta5, theta6]
             joint_trajectory_list.append(joint_trajectory_point)
 

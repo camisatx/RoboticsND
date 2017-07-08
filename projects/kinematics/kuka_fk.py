@@ -9,21 +9,6 @@ FK(thetas) -> pose
 IK(pose) -> thetas
 """
 
-# Define DH param symbols
-theta1, theta2, theta3, theta4, theta5, theta6, theta7 = symbols('theta1:8')
-alpha1, alpha2, alpha3, alpha4, alpha5, alpha6, alpha7 = symbols('alpha1:8')
-d1, d2, d3, d4, d5, d6, d7 = symbols('d1:8')    # link offsets
-a1, a2, a3, a4, a5, a6, a7 = symbols('a1:8')    # link lengths
-
-# Modified DH params for KUKA KR210
-kuka_s = {alpha1:     0, d1:  0.75, a1:      0,
-          alpha2: -pi/2, d2:     0, a2:   0.35, theta2: (theta2 - pi/2),
-          alpha3:     0, d3:     0, a3:   1.25,
-          alpha4: -pi/2, d4:  1.50, a4: -0.054,
-          alpha5:  pi/2, d5:     0, a5:      0,
-          alpha6: -pi/2, d6:     0, a6:      0,
-          alpha7:     0, d7: 0.303, a7:      0, theta7: 0}
-
 
 def build_mod_dh_matrix(s, theta, alpha, d, a):
     """Build the modified DH transformation matrix based on the provided
@@ -45,14 +30,29 @@ def build_mod_dh_matrix(s, theta, alpha, d, a):
     Ta_b = Ta_b.subs(s)
     return Ta_b
 
+# Define DH param symbols
+theta1, theta2, theta3, theta4, theta5, theta6, theta7 = symbols('theta1:8')
+alpha0, alpha1, alpha2, alpha3, alpha4, alpha5, alpha6 = symbols('alpha0:7')
+d1, d2, d3, d4, d5, d6, d7 = symbols('d1:8')    # link offsets
+a0, a1, a2, a3, a4, a5, a6 = symbols('a0:7')    # link lengths
+
+# Modified DH params for KUKA KR210
+kuka_s = {alpha0:     0, d1:  0.75, a0:      0,
+          alpha1: -pi/2, d2:     0, a1:   0.35, theta2: (theta2 - pi/2),
+          alpha2:     0, d3:     0, a2:   1.25,
+          alpha3: -pi/2, d4:  1.50, a3: -0.054,
+          alpha4:  pi/2, d5:     0, a4:      0,
+          alpha5: -pi/2, d6:     0, a5:      0,
+          alpha6:     0, d7: 0.303, a6:      0, theta7: 0}
+
 # Define Modified DH Transformation matrix
-T0_1 = build_mod_dh_matrix(s=kuka_s, theta=theta1, alpha=alpha1, d=d1, a=a1)
-T1_2 = build_mod_dh_matrix(s=kuka_s, theta=theta2, alpha=alpha2, d=d2, a=a2)
-T2_3 = build_mod_dh_matrix(s=kuka_s, theta=theta3, alpha=alpha3, d=d3, a=a3)
-T3_4 = build_mod_dh_matrix(s=kuka_s, theta=theta4, alpha=alpha4, d=d4, a=a4)
-T4_5 = build_mod_dh_matrix(s=kuka_s, theta=theta5, alpha=alpha5, d=d5, a=a5)
-T5_6 = build_mod_dh_matrix(s=kuka_s, theta=theta6, alpha=alpha6, d=d6, a=a6)
-T6_G = build_mod_dh_matrix(s=kuka_s, theta=theta7, alpha=alpha7, d=d7, a=a7)
+T0_1 = build_mod_dh_matrix(s=kuka_s, theta=theta1, alpha=alpha0, d=d1, a=a0)
+T1_2 = build_mod_dh_matrix(s=kuka_s, theta=theta2, alpha=alpha1, d=d2, a=a1)
+T2_3 = build_mod_dh_matrix(s=kuka_s, theta=theta3, alpha=alpha2, d=d3, a=a2)
+T3_4 = build_mod_dh_matrix(s=kuka_s, theta=theta4, alpha=alpha3, d=d4, a=a3)
+T4_5 = build_mod_dh_matrix(s=kuka_s, theta=theta5, alpha=alpha4, d=d5, a=a4)
+T5_6 = build_mod_dh_matrix(s=kuka_s, theta=theta6, alpha=alpha5, d=d6, a=a5)
+T6_G = build_mod_dh_matrix(s=kuka_s, theta=theta7, alpha=alpha6, d=d7, a=a6)
 
 # Create individual transformation matrices
 T0_2 = simplify(T0_1 * T1_2)    # base link to link 2
@@ -87,4 +87,3 @@ print('T4_5 = ', T0_5.evalf(subs={theta1: 0, theta2: 0, theta3: 0, theta4: 0, th
 print('T5_6 = ', T0_6.evalf(subs={theta1: 0, theta2: 0, theta3: 0, theta4: 0, theta5: 0, theta6:0}))
 print('T6_G = ', T0_G.evalf(subs={theta1: 0, theta2: 0, theta3: 0, theta4: 0, theta5: 0, theta6:0}))
 print('T_total = ', T_total.evalf(subs={theta1: 0, theta2: 0, theta3: 0, theta4: 0, theta5: 0, theta6:0}))
-print('T_total = ', T_total.evalf(subs={theta1: 0.74369, theta2: 0.4456, theta3: 1.004, theta4: 0, theta5: 0, theta6:0}))
