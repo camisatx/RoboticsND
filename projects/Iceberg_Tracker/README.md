@@ -9,9 +9,9 @@
 <p>By deploying thousands of these vessels, we will drastically reduce the risk of iceberg collisions, saving lives and money.</p>
 
 <p>Here are some images of a prototype *Iceberg Tracker* robotic vessel:</p>
-<img src="iceberg_tracker.JPG" alt="Iceberg Tracker prototype" width="2448" height="3264">
-<img src="iceberg_tracker_top.JPG" alt="Iceberg Tracker prototype top view" width="2448" height="3264">
-<img src="iceberg_tracker_underwater_fins.JPG" alt="Iceberg Tracker prototype underwate fins" width="3264" height="2448">
+![Iceberg Tracker](iceberg_tracker.JPG)
+![Iceberg Tracker Top](iceberg_tracker_top.JPG)
+![Iceberg Tracker Underwater Fins](iceberg_tracker_underwater_fins.JPG)
 
 <p>Sources:</p>
 <ul>
