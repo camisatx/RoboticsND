@@ -1,3 +1,8 @@
+[//]: # (Image References)
+[iceberg_tracker]: ./iceberg_tracker.JPG
+[iceberg_tracker_top]: ./iceberg_tracker_top.JPG
+[iceberg_tracker_underwater_fins]: ./iceberg_tracker_underwater_fins.JPG
+
 # Iceberg Tracker
 
 <p>Billions of dollars worth of goods travel across the North Atlantic every year. However, climate change is causing increasing numbers of icebergs to drift into major shipping lanes, forcing vessels to drastically slow or take lengthy detours.</p>
@@ -9,9 +14,9 @@
 <p>By deploying thousands of these vessels, we will drastically reduce the risk of iceberg collisions, saving lives and money.</p>
 
 <p>Here are some images of a prototype *Iceberg Tracker* robotic vessel:</p>
-![Iceberg Tracker](iceberg_tracker.JPG)
-![Iceberg Tracker Top](iceberg_tracker_top.JPG)
-![Iceberg Tracker Underwater Fins](iceberg_tracker_underwater_fins.JPG)
+![Iceberg Tracker][iceberg_tracker]
+![Iceberg Tracker Top][iceberg_tracker_top]
+![Iceberg Tracker Underwater Fins][iceberg_tracker_underwater_fins]
 
 <p>Sources:</p>
 <ul>
