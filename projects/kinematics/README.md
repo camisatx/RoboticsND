@@ -15,6 +15,7 @@ This section focuses on kinematic basics, including the use of rotation matrices
 ### Rotation Matrices
 
 [Example 1](rotation_1.py)
+
 [Example 2](rotation_2.py)
 
 ### Euler Angles
@@ -24,11 +25,13 @@ This section focuses on kinematic basics, including the use of rotation matrices
 ### Homogeneous Transformations
 
 [Example 1](homogeneous_transformation_1.py)
+
 [Example 2](homogeneous_transformation_2.py)
 
 ### Forward Kinematics
 
 [Example 1](forward_kinematics.py)
+
 [2 DoF Arm](dof_2_arm_config.py)
 
 ## Kuka Pick and Place Project
