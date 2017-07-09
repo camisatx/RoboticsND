@@ -16,12 +16,14 @@ First install this [Udacity Kinematics Project](https://github.com/udacity/RoboN
 
 To launch the simulator, run:
 `cd ~/catkin_ws/src/RoboND-Kinematics-Project/kuka_arm/scripts`
+
 `./safe_spawner.sh`
 
 You should see both Gazebo and Rviz launch. Gazebo should have a living room environment with the arm, bookshelf, bin and blue can all visible. Rviz should have the arm, bookshelf and bin visible, along with text above the scene indicating its current status.
 
 To run the inverse kinematic code, run the following code in a new terminal:
 `cd ~/catkin_ws/src/RoboND-Kinematics-Project/kuka_arm/scripts`
+
 `rosrun kuka_arm IK_server.py`
 
 You must now press `Next` in the Rviz window to have each step proceed.
