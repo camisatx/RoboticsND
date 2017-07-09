@@ -15,6 +15,7 @@ Finally, this [file](IK_server.py) contains the code that links into the ROS/Gaz
 First install this [Udacity Kinematics Project](https://github.com/udacity/RoboND-Kinematics-Project) code. Then change the inverse kinematics flag to `false`.
 
 To launch the simulator, run:
+
 `cd ~/catkin_ws/src/RoboND-Kinematics-Project/kuka_arm/scripts`
 
 `./safe_spawner.sh`
@@ -22,6 +23,7 @@ To launch the simulator, run:
 You should see both Gazebo and Rviz launch. Gazebo should have a living room environment with the arm, bookshelf, bin and blue can all visible. Rviz should have the arm, bookshelf and bin visible, along with text above the scene indicating its current status.
 
 To run the inverse kinematic code, run the following code in a new terminal:
+
 `cd ~/catkin_ws/src/RoboND-Kinematics-Project/kuka_arm/scripts`
 
 `rosrun kuka_arm IK_server.py`
