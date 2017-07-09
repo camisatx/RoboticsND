@@ -4,11 +4,11 @@ This project uses a simulated [Kuka KR210](https://www.kuka.com/en-us/products/r
 
 The can is location at a random location on the shelf, thus inverse kinematics must be used to determine what angles each joint must be in to successfully put the gripper around the can, along with moving to the drop off bin afterwards.
 
-A forward kinematic test file is located [here](../master/projects/kinematics/kuka_fk.py) that builds transformation matrices for each joint. This is important for ensuring that these matrices are correct.
+A forward kinematic test file is located [here](kuka_fk.py) that builds transformation matrices for each joint. This is important for ensuring that these matrices are correct.
 
-To test the inverse kinematic code, this [file](../master/projects/kinematics/kuka_ik.py) uses predetermined trigonometry formulas to determine the correct joint angles from the test end-effector location.
+To test the inverse kinematic code, this [file](kuka_ik.py) uses predetermined trigonometry formulas to determine the correct joint angles from the test end-effector location.
 
-Finally, this [file](../master/projects/kinematics/IK_server.py) contains the code that links into the ROS/Gazebo/Rviz simulator.
+Finally, this [file](IK_server.py) contains the code that links into the ROS/Gazebo/Rviz simulator.
 
 ### Running the Simulator
 
