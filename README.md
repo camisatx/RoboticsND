@@ -14,7 +14,7 @@ Projects I've included include:
 - [Search and sample return](../master/projects/search_and_sample_return)
 - [Reinforcement learning](../master/projects/learning)
 - [OpenAI Gym](../master/projects/gym)
-- [Kinematics](../master/projects/kinematics)
+- [Kinematics](../master/projects/kinematics/README.md)
 
 #### Notes
 
