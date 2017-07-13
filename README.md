@@ -16,6 +16,7 @@ Projects I've included include:
 - [OpenAI Gym](../master/projects/gym)
 - [Kinematics](../master/projects/kinematics/README.md)
 - [Iceberg Tracker Prototype](../master/projects/Iceberg_Tracker/README.md)
+- [Perception](../master/projects/perception/README.md)
 
 #### Notes
 
