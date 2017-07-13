@@ -4,7 +4,7 @@ Perception involves collecting information about the immediate environment aroun
 
 ## Sensor Types
 
-#### Active Sensors
+### Active Sensors
 
 Active sensors send an energy source into the environment, and measure it's response to develop a map of the environment. The energy source can include light and sound. Different sensor types use different light frequencies.
 
@@ -16,11 +16,11 @@ Active sensors send an energy source into the environment, and measure it's resp
 
 **Ultrasonic sensors** use high frequency sound waves to measure distance by calculating the time it takes for the sound wave to be deflected back to the sensor's receiver. These sensors can be impacted by humidity and temperature of the air the sound waves are traveling through.
 
-#### Passive Sensors
+### Passive Sensors
 
 Passive sensors receive light from the environment around them (i.e. sunlight). Depth data can be determined by capturing multiple angles of a scene. This is done by either moving the camera to a new location, or having a stereo camera which has two cameras separated by a known distance.
 
-#### Hybrid Sensors
+### Hybrid Sensors
 
 Hybrid sensors utilize a combination of the active and passive sensor designs. An example of this is a RGB-D sensor.
 
@@ -38,21 +38,21 @@ The goal of perception is to convert sensor input into a point cloud image where
 
 View the final perception pipeline [here](Exercise-1/RANSAC.py).
 
-#### Voxel Grid Filter
+### Voxel Grid Filter
 
 The raw point cloud will often have more details than required, causing excess processing power use when analyzing it.
 
 A voxel grid filter downsamples the data by taking a spatial average of the points in the cloud confined by each voxel. The set of points which lie within the bounds of a voxel are assigned to that voxel and are statistically combined into one output point.
 
-#### Passthrough Filter
+### Passthrough Filter
 
 Allows a 3D point cloud to be cropped by specifying an axis with cut-off values along that axis. The region allowed to *pass through* is often called the *region of interest*.
 
-#### RANSAC Plan Segmentation
+### RANSAC Plan Segmentation
 
 Random Sample Consensus (RANSAC) is used to identify points in the dataset that belong to a particular model. It assumes that all of the data in a dataset is composed of both inliers and outliers, where inliers can be defined by a particular model with a specific set of parameters, and outliers don't thus they can be discarded.
 
-#### Outlier Removal Filter
+### Outlier Removal Filter
 
 Outlier filters can remove outliers from the point cloud. These outliers are often caused by external factors like dust in the environment, humidity in the air, or presence of various light sources. One such filter is PCL's StatisticalOutlierRemoval filter that computes the distance to each point's neighbors, then calculates a mean distance. Any points whose mean distances are outside a defined interval are removed.
 
@@ -66,13 +66,13 @@ The two main algorithms possible include:
 
 - DBSCAN
 
-#### K-means
+### K-means
 
 K-means clustering algorithm is able to group data points into n groups based on their distance to randomly chosen centroids.
 
 Here is some test [code](Exercise-2/k_means.py) for k-means.
 
-#### DBSCAN
+### DBSCAN
 
 Density-based spatial cluster of applications with noise (DBSCAN) (sometimes called *Euclidean clustering*) is a clustering algorithm that creates clusters by grouping data points that are within some threshold distance from their nearest neighbor.
 
