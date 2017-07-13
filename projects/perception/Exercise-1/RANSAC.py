@@ -95,7 +95,7 @@ pcl.save(extracted_outliers, filename)
 #   often caused by external factors like dust in the environment, humidity in
 #   the air, or presence of various light sources. One such filter is
 #   PCL's StaticsticalOutlierRemoval fileter that computes the distance to
-#   each point's neights, then calculates a mean distance. Any points whose
+#   each point's neighbors, then calculates a mean distance. Any points whose
 #   mean distances are outside a defined interval are removed.
 
 ## Create a filter object
