@@ -9,6 +9,17 @@ This project uses a simulated [Kuka KR210](https://www.kuka.com/en-us/products/r
 
 The can is location at a random location on the shelf, thus inverse kinematics must be used to determine what angles each joint must use to successfully put the gripper around the can, and to move the arm to the drop off bin afterwards.
 
+### Contents
+
+- [Denavit-Hartenberg Diagram](#denavit-hartenberg-diagram)
+- [Denavit-Hartenberg Parameters](#denavit-hartenberg-parameters)
+- [Joint Based Transformation Matrices](#joint-based-transformation-matrices)
+- [Base to Gripper Homogeneous Transformation Matrix](#base-to-gripper-homogeneous-transformation-matrix)
+- [Inverse Kinematic Calculations](#inverse-kinematic-calculations)
+    - [Inverse Kinematic Position](#inverse-kinematic-position)
+    - [Inverse Kinematic Orientation](#inverse-kinematic-orientation)
+- [Test Code](#test-code)
+
 ## Denavit-Hartenberg Diagram
 
 Here is a Denavit-Hartenberg (DH) diagram of the arm:
