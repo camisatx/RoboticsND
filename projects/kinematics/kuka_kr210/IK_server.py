@@ -93,7 +93,7 @@ def handle_calculate_IK(req):
             
             # Modified DH params for KUKA KR210
             s = {alpha0:     0, d1:  0.75, a0:      0,
-                 alpha1:  pi/2, d2:     0, a1:   0.35,,
+                 alpha1:  pi/2, d2:     0, a1:   0.35,
                  alpha2:     0, d3:     0, a2:   1.25,
                  alpha3:  pi/2, d4:  1.50, a3: -0.054,
                  alpha4: -pi/2, d5:     0, a4:      0,
