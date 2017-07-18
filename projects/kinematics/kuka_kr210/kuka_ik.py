@@ -1,5 +1,5 @@
 import numpy as np
-from sympy import symbols, pi, sin, cos, asin, atan2, sqrt, simplify
+from sympy import symbols, pi, sin, cos, atan2, sqrt, simplify
 from sympy.matrices import Matrix
 import tf
 
@@ -95,12 +95,6 @@ yaw = 0.0
 #roll = 0.00045545
 #pitch = -0.0003967
 #yaw = 0.0002318
-# 1: 0, 0, 0.761304
-# 2: -0.220594, 0.187878, 0.620579
-# 3: -0.034687, 0.0295427, 0.760513
-# 4: -0.479527, -0.51299, 0.562215
-# 5: -0.7394, -0.0004385, -0.000137
-# 6: 0.000455, -0.00039676, 0.0002318
 
 ##############################################################################
 # Step 1: Convert pose and orientation into a transformation matrix to 
@@ -146,7 +140,6 @@ if abs(cos_phi2) > 1:
     cos_phi2 = 1
     print('cos_phi2 is greater than 1')
 phi2 = atan2(sqrt(1 - cos_phi2**2), cos_phi2)
-#theta3 = (phi2 - phi1).evalf()
 theta3 = (phi1 - phi2).evalf()
 theta3 = np.clip(theta3, -210*dtr, (155-90)*dtr)
 
@@ -223,13 +216,11 @@ else:
     # General orientation
 
     # Yaw angle; rotation around the z-axis
-    #theta4 = (atan2(r21, r11) - np.pi/2).evalf()
-    theta4 = (atan2(r32, r33) - np.pi/2).evalf()
+    theta4 = (atan2(r21, r11) - np.pi/2).evalf()
     theta4 = np.clip(theta4, -350*dtr, 350*dtr)
     
     # Roll angle; rotation around the x-axis
-    #theta6 = (atan2(r32, r33) - np.pi/2).evalf()
-    theta6 = (atan2(r21, r11) - np.pi/2).evalf()
+    theta6 = (atan2(r32, r33) - np.pi/2).evalf()
     theta6 = np.clip(theta6, -350*dtr, 350*dtr)
 
 print('Theta 1: %s' % theta1)

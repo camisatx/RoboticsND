@@ -62,9 +62,8 @@ T0_5 = simplify(T0_4 * T4_5)    # base link to link 5
 T0_6 = simplify(T0_5 * T5_6)    # base link to link 6
 T0_G = simplify(T0_6 * T6_G)    # base link to gripper
 
-# Correction to account for orientation difference between definition of gripper link in
-#   URDF file and the DH convention.
-#   (rotation around Z axis by 180 deg and X axis by -90 deg)
+# Correction to account for orientation difference between the gripper and
+#   the arm base (rotation around Z axis by 180 deg and Y axis by -90 deg)
 R_z = Matrix([[     cos(pi), -sin(pi),          0, 0],
               [     sin(pi),  cos(pi),          0, 0],
               [           0,        0,          1, 0],
@@ -79,11 +78,19 @@ R_corr = simplify(R_z * R_y)
 T_total = simplify(T0_G * R_corr)
 
 # Numerically evaluate transforms (compare this with output of tf_echo)
-print('T0_1 = ', T0_1.evalf(subs={theta1: 0, theta2: 0, theta3: 0, theta4: 0, theta5: 0, theta6:0}))
-print('T1_2 = ', T0_2.evalf(subs={theta1: 0, theta2: 0, theta3: 0, theta4: 0, theta5: 0, theta6:0}))
-print('T2_3 = ', T0_3.evalf(subs={theta1: 0, theta2: 0, theta3: 0, theta4: 0, theta5: 0, theta6:0}))
-print('T3_4 = ', T0_4.evalf(subs={theta1: 0, theta2: 0, theta3: 0, theta4: 0, theta5: 0, theta6:0}))
-print('T4_5 = ', T0_5.evalf(subs={theta1: 0, theta2: 0, theta3: 0, theta4: 0, theta5: 0, theta6:0}))
-print('T5_6 = ', T0_6.evalf(subs={theta1: 0, theta2: 0, theta3: 0, theta4: 0, theta5: 0, theta6:0}))
-print('T6_G = ', T0_G.evalf(subs={theta1: 0, theta2: 0, theta3: 0, theta4: 0, theta5: 0, theta6:0}))
+print(T0_1)
+print(T1_2)
+print(T2_3)
+print(T3_4)
+print(T4_5)
+print(T5_6)
+print(T6_G)
+#print(T0_G)
+#print('T0_1 = ', T0_1.evalf(subs={theta1: 0, theta2: 0, theta3: 0, theta4: 0, theta5: 0, theta6:0}))
+#print('T1_2 = ', T0_2.evalf(subs={theta1: 0, theta2: 0, theta3: 0, theta4: 0, theta5: 0, theta6:0}))
+#print('T2_3 = ', T0_3.evalf(subs={theta1: 0, theta2: 0, theta3: 0, theta4: 0, theta5: 0, theta6:0}))
+#print('T3_4 = ', T0_4.evalf(subs={theta1: 0, theta2: 0, theta3: 0, theta4: 0, theta5: 0, theta6:0}))
+#print('T4_5 = ', T0_5.evalf(subs={theta1: 0, theta2: 0, theta3: 0, theta4: 0, theta5: 0, theta6:0}))
+#print('T5_6 = ', T0_6.evalf(subs={theta1: 0, theta2: 0, theta3: 0, theta4: 0, theta5: 0, theta6:0}))
+#print('T0_G = ', T0_G.evalf(subs={theta1: 0, theta2: 0, theta3: 0, theta4: 0, theta5: 0, theta6:0}))
 print('T_total = ', T_total.evalf(subs={theta1: 0, theta2: 0, theta3: 0, theta4: 0, theta5: 0, theta6:0}))
