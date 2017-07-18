@@ -190,7 +190,27 @@ r11 = R3_6[0, 0]
 theta4 = atan(r21, r11) - pi/2
 ```
 
-I added the ability for the code to detect gimbal lock that could occur on joint 4 and 6. If a lock is detected, the code sets joint 4 to 0 and joint 6 to the required angle.
+#### Gimbal Lock
+
+I added the ability for the code to detect gimbal lock that could occur on joint 4 and 6.
+
+If gimbal lock is detected for a pitch of -90 degrees, thetas 4 and 6 become:
+
+```python
+theta4 = 0
+r12 = R3_6[0, 1]
+r13 = R3_6[0, 2]
+theta6 = atan2(-r12, -r13)
+```
+
+Alternatively, if a gimbal lock occurs for a pitch of 90 degrees, thetas 4 and 6 become:
+
+```python
+theta4 = 0
+r12 = R3_6[0, 1]
+r13 = R3_6[0, 2]
+theta6 = atan2(r12, r13)
+```
 
 ## Test Code
 
