@@ -93,12 +93,12 @@ def handle_calculate_IK(req):
             
             # Modified DH params for KUKA KR210
             s = {alpha0:     0, d1:  0.75, a0:      0,
-                 alpha1:  pi/2, d2:     0, a1:   0.35, theta2: (theta2 - pi/2),
+                 alpha1:  pi/2, d2:     0, a1:   0.35,,
                  alpha2:     0, d3:     0, a2:   1.25,
                  alpha3:  pi/2, d4:  1.50, a3: -0.054,
                  alpha4: -pi/2, d5:     0, a4:      0,
                  alpha5:  pi/2, d6:     0, a5:      0,
-                 alpha6:     0, d7: 0.303, a6:      0, theta7: 0}
+                 alpha6:     0, d7: 0.303, a6:      0,}
             
             # EE location and orientation
             px = req.poses[x].position.x
@@ -232,13 +232,11 @@ def handle_calculate_IK(req):
                 # General orientation
 
                 # Yaw angle; rotation around the z-axis
-                #theta4 = (atan2(r21, r11) - pi/2).evalf()
-                theta4 = (atan2(r32, r33) - pi/2).evalf()
+                theta4 = (atan2(r21, r11) - pi/2).evalf()
                 theta4 = np.clip(theta4, -350*dtr, 350*dtr)
                             
                 # Roll angle; rotation around the x-axis
-                #theta6 = (atan2(r32, r33) - pi/2).evalf()
-                theta6 = (atan2(r21, r11) - pi/2).evalf()
+                theta6 = (atan2(r32, r33) - pi/2).evalf()
                 theta6 = np.clip(theta6, -350*dtr, 350*dtr)
 
             # Populate response for the IK request

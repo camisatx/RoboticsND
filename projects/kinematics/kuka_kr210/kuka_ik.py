@@ -65,12 +65,12 @@ a0, a1, a2, a3, a4, a5, a6 = symbols('a0:7')    # link lengths
 
 # Modified DH params for KUKA KR210
 s = {alpha0:     0, d1:  0.75, a0:      0,
-     alpha1:  pi/2, d2:     0, a1:   0.35, theta2: (theta2 - pi/2),
+     alpha1:  pi/2, d2:     0, a1:   0.35,
      alpha2:     0, d3:     0, a2:   1.25,
      alpha3:  pi/2, d4:  1.50, a3: -0.054,
      alpha4: -pi/2, d5:     0, a4:      0,
      alpha5:  pi/2, d6:     0, a5:      0,
-     alpha6:     0, d7: 0.303, a6:      0, theta7: 0}
+     alpha6:     0, d7: 0.303, a6:      0,}
 
 # EE location and orientation
 #px = req.poses[x].position.x
@@ -199,7 +199,6 @@ r33 = R3_6[2, 2]
 
 # Pitch angle; rotation around the y-axis
 theta5 = atan2(-r31, sqrt(r11**2 + r21**2)).evalf()
-#theta5 = asin(r31)
 theta5 = np.clip(theta5, -125*dtr, 125*dtr)
 
 if r31 == 1:
