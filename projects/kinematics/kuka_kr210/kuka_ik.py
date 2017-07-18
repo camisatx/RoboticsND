@@ -88,6 +88,20 @@ roll = 0.0
 pitch = 0.0
 yaw = 0.0
 
+# Test post and orientation of EE over trash can
+#px = -0.10004
+#py = 2.50003
+#pz = 1.60002
+#roll = 0.00045545
+#pitch = -0.0003967
+#yaw = 0.0002318
+# 1: 0, 0, 0.761304
+# 2: -0.220594, 0.187878, 0.620579
+# 3: -0.034687, 0.0295427, 0.760513
+# 4: -0.479527, -0.51299, 0.562215
+# 5: -0.7394, -0.0004385, -0.000137
+# 6: 0.000455, -0.00039676, 0.0002318
+
 ##############################################################################
 # Step 1: Convert pose and orientation into a transformation matrix to 
 #   compute the wrist center
@@ -128,18 +142,19 @@ L3_WC = sqrt(s[a3]**2 + s[d4]**2)
 # Determine the angle for joint 3
 phi1 = s[alpha3] - atan2(s[a3], s[d4])
 cos_phi2 = (L2_WC**2 - L3_WC**2 - s[a2]**2) / (2 * L3_WC * s[a2])
-if cos_phi2 > 1:
+if abs(cos_phi2) > 1:
     cos_phi2 = 1
     print('cos_phi2 is greater than 1')
 phi2 = atan2(sqrt(1 - cos_phi2**2), cos_phi2)
-theta3 = (phi2 - phi1).evalf()
+#theta3 = (phi2 - phi1).evalf()
+theta3 = (phi1 - phi2).evalf()
 theta3 = np.clip(theta3, -210*dtr, (155-90)*dtr)
 
 # Determine the angle for joint 2
 L2_WC_xy = sqrt(X2_WC**2 + Y2_WC**2)
 phi3 = atan2(Z2_WC, L2_WC_xy)
 cos_phi4 = (L3_WC**2 - L2_WC**2 - s[a2]**2) / (-2 * L2_WC * s[a2])
-if cos_phi4 > 1:
+if abs(cos_phi4) > 1:
     cos_phi4 = 1
     print('cos_phi4 is greater than 1')
 phi4 = atan2(sqrt(1 - cos_phi4**2), cos_phi4)
@@ -161,7 +176,7 @@ R0_3 = (T0_1 * T1_2 * T2_3).evalf(subs={theta1: theta1,
 
 # Correction to account for orientation difference between definition of
 #   gripper link in the URDF file and the DH convention.
-#   (rotation around Z axis by 180 deg and X axis by -90 deg)
+#   (rotation around Z axis by 180 deg and Y axis by -90 deg)
 R_corr = simplify(rot_z(pi) * rot_y(-pi/2))
 
 # Calculate the symbolic rotation matrix of the spherical wrist joints
@@ -190,9 +205,9 @@ r32 = R3_6[2, 1]
 r33 = R3_6[2, 2]
 
 # Pitch angle; rotation around the y-axis
-#theta5 = atan2(-r31, sqrt(r11**2 + r21**2)).evalf()
-theta5 = asin(r31)
-#theta5 = np.clip(theta5, -125*dtr, 125*dtr)
+theta5 = atan2(-r31, sqrt(r11**2 + r21**2)).evalf()
+#theta5 = asin(r31)
+theta5 = np.clip(theta5, -125*dtr, 125*dtr)
 
 if r31 == 1:
     # Gimbal lock at pitch = -90
@@ -208,13 +223,14 @@ else:
     # General orientation
 
     # Yaw angle; rotation around the z-axis
-    theta4 = (atan2(r21, r11) - np.pi/2).evalf()
-    #theta4 = np.clip(theta4, -350*dtr, 350*dtr)
+    #theta4 = (atan2(r21, r11) - np.pi/2).evalf()
+    theta4 = (atan2(r32, r33) - np.pi/2).evalf()
+    theta4 = np.clip(theta4, -350*dtr, 350*dtr)
     
     # Roll angle; rotation around the x-axis
-    #theta6 = np.pi/2 + atan2(r32, r33)
-    theta6 = (atan2(r32, r33) - np.pi/2).evalf()
-    #theta6 = np.clip(theta6, -350*dtr, 350*dtr)
+    #theta6 = (atan2(r32, r33) - np.pi/2).evalf()
+    theta6 = (atan2(r21, r11) - np.pi/2).evalf()
+    theta6 = np.clip(theta6, -350*dtr, 350*dtr)
 
 print('Theta 1: %s' % theta1)
 print('Theta 2: %s' % theta2)

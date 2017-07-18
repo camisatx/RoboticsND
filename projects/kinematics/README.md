@@ -36,4 +36,4 @@ This section focuses on kinematic basics, including the use of rotation matrices
 
 ## Kuka Pick and Place Project
 
-There is also a kinematic based project that uses a simulated Kuka KR210 6 DoF manipulator to pick an object from a shelf and place it in a bin next to it. This task involves calculating the inverse kinematics of positioning the manipulator to move on the correct trajectories. View the write-up [here](Kuka_Pick_and_Place.md).
+There is also a kinematic based project that uses a simulated Kuka KR210 6 DoF manipulator to pick an object from a shelf and place it in a bin next to it. This task involves calculating the inverse kinematics of positioning the manipulator to move on the correct trajectories. View the write-up [here](./kuka_kr210/README.md).
