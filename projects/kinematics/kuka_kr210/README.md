@@ -1,6 +1,6 @@
 [//]: # (Image References)
-[dh_diagram]: ./misc/dh_diagram.svg
-[trigonometric_diagram]: ./misc/trigonometric_diagram.svg
+[dh_diagram]: ./misc/dh_diagram.jpg
+[trigonometric_diagram]: ./misc/trigonometric_diagram.jpg
 
 # Kuka KR210 Pick and Place Project
 ---
