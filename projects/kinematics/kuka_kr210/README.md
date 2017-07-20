@@ -165,51 +165,17 @@ Where:
 
 With this rotation matrix, it is possible to derive the Euler angles.
 
-Joint 6 is responsible for roll. It is derived with this equation:
+#### Euler Angles
+
+I used a [tf transformations](http://www.lfd.uci.edu/~gohlke/code/transformations.py.html) function called `euler_from_matrix` that takes in a numpy rotation matrix and Euler axis sequence, and returns the three Euler angles (alpha, beta and gamma).
+
+The rotation matrix I provided used the Euler definition of `XYZ`, which is a Tait-Bryan angle combination. With the alpha, beta and gamma angles, I mapped them to theta 4, theta 5 and theta 6, respectively.
+
+However, theta 4 and theta 5 required these additional calculations:
 
 ```python
-r32 = R3_6[2, 1]
-r33 = R3_6[2, 2]
-theta6 = atan2(r32, r33) - pi/2
-```
-
-Joint 5 is responsible for pitch. It is derived with this equation:
-
-```python
-r11 = R3_6[0, 0]
-r21 = R3_6[1, 0]
-r31 = R3_6[2, 0]
-theta5 = atan2(-r31, sqrt(r11**2 + r21**2))
-```
-
-Joint 4 is responsible for yaw. It is derived with this equation:
-
-```python
-r21 = R3_6[1, 0]
-r11 = R3_6[0, 0]
-theta4 = atan(r21, r11) - pi/2
-```
-
-#### Gimbal Lock
-
-I added the ability for the code to detect gimbal lock that could occur on joint 4 and 6.
-
-If gimbal lock is detected for a pitch of -90 degrees, thetas 4 and 6 become:
-
-```python
-theta4 = 0
-r12 = R3_6[0, 1]
-r13 = R3_6[0, 2]
-theta6 = atan2(-r12, -r13)
-```
-
-Alternatively, if a gimbal lock occurs for a pitch of 90 degrees, thetas 4 and 6 become:
-
-```python
-theta4 = 0
-r12 = R3_6[0, 1]
-r13 = R3_6[0, 2]
-theta6 = atan2(r12, r13)
+theta4 = np.pi/2 + theta4
+theta5 = np.pi/2 - theta5
 ```
 
 ## Test Code
