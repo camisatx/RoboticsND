@@ -187,48 +187,50 @@ def handle_calculate_IK(req):
             ###################################################################
             # Step 4: Calculate the spherical wrist joint angles via Euler angles
 
-            ## tf requires a numpy matrix instead of a sympy matrix
-            #R3_6_np = np.array(R3_6).astype(np.float64)
+            # tf requires a numpy matrix instead of a sympy matrix
+            R3_6_np = np.array(R3_6).astype(np.float64)
 
-            ## Convert the rotation matrix to Euler angles using tf
-            #theta4, theta5, theta6 = tf.transformations.euler_from_matrix(
-            #    R3_6_np, axes='rxyx')
-            ## xyx, yzx
+            # Convert the rotation matrix to Euler angles using tf
+            alpha, beta, gamma = tf.transformations.euler_from_matrix(
+                R3_6_np, axes='rxyz')   # xyx, yzx, xyz
+            theta4 = alpha
+            theta5 = beta
+            theta6 = gamma
 
-            #theta4 = np.pi + theta4
-            #theta5 = np.pi/2 - theta5
-            #theta6 = np.pi/2 + theta6
+            theta4 = np.pi/2 + theta4
+            theta5 = np.pi/2 - theta5
+            #theta6 = theta6 - 2*np.pi
             
-            r11 = R3_6[0, 0]
-            r12 = R3_6[0, 1]
-            r13 = R3_6[0, 2]
-            r21 = R3_6[1, 0]
-            r31 = R3_6[2, 0]
-            r32 = R3_6[2, 1]
-            r33 = R3_6[2, 2]
+            #r11 = R3_6[0, 0]
+            #r12 = R3_6[0, 1]
+            #r13 = R3_6[0, 2]
+            #r21 = R3_6[1, 0]
+            #r31 = R3_6[2, 0]
+            #r32 = R3_6[2, 1]
+            #r33 = R3_6[2, 2]
 
-            # Pitch angle; rotation around the y-axis
-            theta5 = atan2(-r31, sqrt(r11**2 + r21**2)).evalf()
-            theta5 = np.clip(theta5, -125*dtr, 125*dtr)
+            ## Pitch angle; rotation around the y-axis
+            #theta5 = atan2(-r31, sqrt(r11**2 + r21**2)).evalf()
+            #theta5 = np.clip(theta5, -125*dtr, 125*dtr)
 
-            if r31 == 1:
-                # Gimbal lock at pitch = -90
-                theta4 = 0                          # yaw = 0
-                theta6 = atan(-r12, -r13).evalf()   # roll
-            elif r31 == -1:
-                # Gimbal lock at pitch = 90
-                theta4 = 0                          # yaw = 0
-                theta6 = atan2(r12, r13).evalf()    # roll
-            else:
-                # General orientation
+            #if r31 == 1:
+            #    # Gimbal lock at pitch = -90
+            #    theta4 = 0                          # yaw = 0
+            #    theta6 = atan(-r12, -r13).evalf()   # roll
+            #elif r31 == -1:
+            #    # Gimbal lock at pitch = 90
+            #    theta4 = 0                          # yaw = 0
+            #    theta6 = atan2(r12, r13).evalf()    # roll
+            #else:
+            #    # General orientation
 
-                # Yaw angle; rotation around the z-axis
-                theta4 = (atan2(r21, r11)).evalf()
-                theta4 = np.clip(theta4, -350*dtr, 350*dtr)
-                            
-                # Roll angle; rotation around the x-axis
-                theta6 = (atan2(r32, r33)).evalf()
-                theta6 = np.clip(theta6, -350*dtr, 350*dtr)
+            #    # Yaw angle; rotation around the z-axis
+            #    theta4 = (atan2(r21, r11)).evalf()
+            #    theta4 = np.clip(theta4, -350*dtr, 350*dtr)
+            #                
+            #    # Roll angle; rotation around the x-axis
+            #    theta6 = (atan2(r32, r33)).evalf()
+            #    theta6 = np.clip(theta6, -350*dtr, 350*dtr)
 
             # Populate response for the IK request
             joint_trajectory_point.positions = [theta1, theta2, theta3, theta4, theta5, theta6]
