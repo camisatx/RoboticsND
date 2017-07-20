@@ -15,6 +15,7 @@ Projects I've included include:
 - [Reinforcement learning](../master/projects/learning)
 - [OpenAI Gym](../master/projects/gym)
 - [Kinematics](../master/projects/kinematics/README.md)
+    - [Kuka KR210 Pick and Place Challenge](../master/projects/kinematics/kuka_kr210/README.md)
 - [Iceberg Tracker Prototype](../master/projects/Iceberg_Tracker/README.md)
 - [Perception](../master/projects/perception/README.md)
 
