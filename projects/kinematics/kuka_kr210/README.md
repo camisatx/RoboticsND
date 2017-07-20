@@ -35,11 +35,11 @@ Based on the arm's specifications, I was able to derive the following parameters
 | n |  θ |   d   |    a   |  α  |
 |:-:|:--:|:-----:|:------:|:---:|
 | 0 |  - |   -   |    0   |  0  |
-| 1 | θ1 |  0.75 |  0.35  |  90 |
+| 1 | θ1 |  0.75 |  0.35  | -90 |
 | 2 | θ2 |   0   |  1.25  |  0  |
-| 3 | θ3 |   0   | -0.054 |  90 |
-| 4 | θ4 |  1.5  |    0   | -90 |
-| 5 | θ5 |   0   |    0   |  90 |
+| 3 | θ3 |   0   | -0.054 | -90 |
+| 4 | θ4 |  1.5  |    0   |  90 |
+| 5 | θ5 |   0   |    0   | -90 |
 | 6 | θ6 | 0.303 |    0   |  0  |
 
 The a and α parameters do not change from orientation to orientation because they are specific to the arm. However, the θ and d parameters can change depending on the orientation. For this arm, only the θ parameters will change since all the joints are revolute.
@@ -159,9 +159,9 @@ R3_6 = R0_3.T * Rrpy * R_corr
 ```
 
 Where:
-- R0_3.T is the transposition of the rotation matrix from joints 1, 2 and 3, requiring the angles derived in the inverse kinematic position calculations
-- Rrpy is the rotation matrix of the gripper's current roll, pitch and yaw
-- R_corr is the rotation matrix of the gripper correction matrix that rotates the gripper around the Z axis by 180 degrees and around the Y axis by -90 degrees
+- `R0_3.T` is the transposition of the rotation matrix from joints 1, 2 and 3, requiring the angles derived in the inverse kinematic position calculations
+- `Rrpy` is the rotation matrix of the gripper's current roll, pitch and yaw
+- `R_corr` is the rotation matrix of the gripper correction matrix that rotates the gripper around the Z axis by 180 degrees and around the Y axis by -90 degrees
 
 With this rotation matrix, it is possible to derive the Euler angles.
 
@@ -214,11 +214,9 @@ theta6 = atan2(r12, r13)
 
 ## Test Code
 
-A forward kinematic test file called [kuka_fk.py](kuka_fk.py) builds transformation matrices for each joint. This is important for ensuring that these matrices are correct.
+The inverse kinematic code can be tested with the [IK_debug.py](IK_debug.py) file. It has the ability to test the code against multiple positions and orientations, printing out the error rates for the joint angles and the wrist center location.
 
-To test the inverse kinematic code, the [kuka_ik.py file](kuka_ik.py) uses predetermined trigonometric formulas to determine the correct joint angles the arm should use to place the end-effector in the right position.
-
-Finally, the [IK_server.py file](IK_server.py) contains the code that links into the ROS/Gazebo/Rviz simulator.
+Finally, the [IK_server.py](IK_server.py) file contains the code that links into the ROS/Gazebo/Rviz simulator.
 
 ### Running the Simulator
 
