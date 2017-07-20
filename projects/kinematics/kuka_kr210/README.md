@@ -1,9 +1,12 @@
 [//]: # (Image References)
+[kuka_pick_and_place]: ./misc/kuka_pick_and_place.png
 [dh_diagram]: ./misc/dh_diagram.jpg
 [trigonometric_diagram]: ./misc/trigonometric_diagram.jpg
 
 # Kuka KR210 Pick and Place Project
 ---
+
+![Kuka KR210 Pick and Place Project][kuka_pick_and_place]
 
 This project uses a simulated [Kuka KR210](https://www.kuka.com/en-us/products/robotics-systems/industrial-robots/kr-210-2-f-exclusive) 6 degree of freedom manipulator to pick up a can from a shelf and drop it into a bin next to the manipulator.
 

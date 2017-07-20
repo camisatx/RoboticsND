@@ -1,3 +1,6 @@
+[//]: # (Image Reference)
+[kuka_pick_and_place]: ./kuka_kr210/misc/kuka_pick_and_place.png
+
 # Kinematics
 
 Kinematics is a branch of classical mechanics that describes the motion of points, bodies (objects), and systems of bodies (groups of objects) without considering the mass of each or the forces that caused the motion ([Wikipedia](https://en.wikipedia.org/wiki/Kinematics)). In robotics, kinematics is mostly used to describe the motion of robotic arms.
@@ -36,4 +39,10 @@ This section focuses on kinematic basics, including the use of rotation matrices
 
 ## Kuka Pick and Place Project
 
-There is also a kinematic based project that uses a simulated Kuka KR210 6 DoF manipulator to pick an object from a shelf and place it in a bin next to it. This task involves calculating the inverse kinematics of positioning the manipulator to move on the correct trajectories. View the write-up [here](./kuka_kr210/README.md).
+![Kuka KR210 Pick and Place Project][kuka_pick_and_place]
+
+The Kuka Pick and Place project used kinematics to control a simulated Kuka KR210 6 DoF manipulator to pick up a can from a shelf and drop it into a bin next to the arm.
+
+This task involved calculating the forward and inverse kinematics of the arm, so that the gripper could be placed in the right position and orientation for grabbing the can.
+
+View the write-up [here](./kuka_kr210/README.md).
