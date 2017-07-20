@@ -65,12 +65,12 @@ a0, a1, a2, a3, a4, a5, a6 = symbols('a0:7')    # link lengths
 
 # Modified DH params for KUKA KR210
 s = {alpha0:     0, d1:  0.75, a0:      0,
-     alpha1:  pi/2, d2:     0, a1:   0.35,
+     alpha1: -pi/2, d2:     0, a1:   0.35, theta2: theta2 - pi/2,
      alpha2:     0, d3:     0, a2:   1.25,
-     alpha3:  pi/2, d4:  1.50, a3: -0.054,
-     alpha4: -pi/2, d5:     0, a4:      0,
-     alpha5:  pi/2, d6:     0, a5:      0,
-     alpha6:     0, d7: 0.303, a6:      0,}
+     alpha3: -pi/2, d4:  1.50, a3: -0.054,
+     alpha4:  pi/2, d5:     0, a4:      0,
+     alpha5: -pi/2, d6:     0, a5:      0,
+     alpha6:     0, d7: 0.303, a6:      0, theta7: 0,}
 
 # EE location and orientation
 #px = req.poses[x].position.x
@@ -88,20 +88,12 @@ roll = 0.0
 pitch = 0.0
 yaw = 0.0
 
-# Test post and orientation of EE over trash can
-#px = -0.10004
-#py = 2.50003
-#pz = 1.60002
-#roll = 0.00045545
-#pitch = -0.0003967
-#yaw = 0.0002318
-
 ##############################################################################
 # Step 1: Convert pose and orientation into a transformation matrix to 
 #   compute the wrist center
 
 # Build EE roation matrix
-Rrpy = rot_x(roll) * rot_y(pitch) * rot_z(yaw)
+Rrpy = rot_z(yaw) * rot_y(pitch) * rot_x(roll)
 lx = Rrpy[0, 0]
 ly = Rrpy[1, 0]
 lz = Rrpy[2, 0]
@@ -110,7 +102,7 @@ lz = Rrpy[2, 0]
 wx = px - (s[d7] + s[d6]) * lx
 wy = py - (s[d7] + s[d6]) * ly
 wz = pz - (s[d7] + s[d6]) * lz
-#print('EE location: (%s, %s, %s)' % (wx, wy, wz))
+#print('WC location: (%s, %s, %s)' % (wx, wy, wz))
 
 ##############################################################################
 # Step 2: Calculate thetas for joint 1, 2 and 3 (determines EE position)
@@ -129,18 +121,23 @@ X2_WC = wx - x2
 Y2_WC = wy - y2
 Z2_WC = wz - z2
 
-# Find the distances between joints 2 and 3, and the wrist center
+# Find the distances between joint 2 and the wrist center
 L2_WC = sqrt(X2_WC**2 + Y2_WC**2 + Z2_WC**2)
-L3_WC = sqrt(s[a3]**2 + s[d4]**2)
+
+# Find the distance between joint 2 and the wrist center
+L3_4 = 0.96     # Distance from joint 3 to joint 4
+L4_5 = 0.54     # Distance from joint 4 to joint 5 (WC)
+L3_4_x = sqrt(L3_4**2 + abs(s[a3])**2)      # X distance from joint 3 to joint 4
+phi1 = pi - atan2(abs(s[a3]), L3_4_x)
+L3_WC = sqrt(L3_4**2 + L4_5**2 - 2 * L3_4 * L4_5 * cos(phi1))
 
 # Determine the angle for joint 3
-phi1 = s[alpha3] - atan2(s[a3], s[d4])
-cos_phi2 = (L2_WC**2 - L3_WC**2 - s[a2]**2) / (2 * L3_WC * s[a2])
+cos_phi2 = (L2_WC**2 - L3_WC**2 - s[a2]**2) / (-2 * L3_WC * s[a2])
 if abs(cos_phi2) > 1:
     cos_phi2 = 1
     print('cos_phi2 is greater than 1')
 phi2 = atan2(sqrt(1 - cos_phi2**2), cos_phi2)
-theta3 = (phi1 - phi2).evalf()
+theta3 = (pi/2 - phi2).evalf()
 theta3 = np.clip(theta3, -210*dtr, (155-90)*dtr)
 
 # Determine the angle for joint 2
@@ -151,7 +148,7 @@ if abs(cos_phi4) > 1:
     cos_phi4 = 1
     print('cos_phi4 is greater than 1')
 phi4 = atan2(sqrt(1 - cos_phi4**2), cos_phi4)
-theta2 = (s[alpha1] - (phi3 + phi4)).evalf()
+theta2 = (pi/2 - (phi3 + phi4)).evalf()
 theta2 = np.clip(theta2, -45*dtr, 85*dtr)
 
 ##############################################################################
@@ -184,7 +181,8 @@ R3_6 = R0_3.T * Rrpy * R_corr
 #
 ## Convert the rotation matrix to Euler angles using tf
 #theta4, theta5, theta6 = tf.transformations.euler_from_matrix(R3_6_np, axes='ryzx')
-#
+## xyx, yzx
+
 #theta4 = np.pi + theta4
 #theta5 = np.pi/2 - theta5
 #theta6 = np.pi/2 + theta6
@@ -215,11 +213,11 @@ else:
     # General orientation
 
     # Yaw angle; rotation around the z-axis
-    theta4 = (atan2(r21, r11) - np.pi/2).evalf()
+    theta4 = (atan2(r21, r11)).evalf()
     theta4 = np.clip(theta4, -350*dtr, 350*dtr)
     
     # Roll angle; rotation around the x-axis
-    theta6 = (atan2(r32, r33) - np.pi/2).evalf()
+    theta6 = (atan2(r32, r33)).evalf()
     theta6 = np.clip(theta6, -350*dtr, 350*dtr)
 
 print('Theta 1: %s' % theta1)
