@@ -24,6 +24,7 @@ Projects I've included include:
 The notes section includes Markdown files that have personal notes from research papers I've read. The current topics covered include:
 - [Bio inspired robots](../master/notes/bio_inspired)
 - [Human robot interaction](../master/notes/human_robot_interaction)
+- [Soft robots](../master/notes/soft_robots/README.md)
 
 ## Future
 
