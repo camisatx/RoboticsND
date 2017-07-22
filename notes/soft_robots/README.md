@@ -72,8 +72,8 @@ Low level control of pressure based robots using pressure transducers or volume 
 
 [Design, Fabrication, and Control of Soft Robots](./papers/Design_Fabrication_and_Control_of_Soft_Robots.pdf)
 
-[A Hybrid Combining Hard and Soft Robots](./papers/A_Hybrid_Combining_Hard_and_Soft_Robot.pdf)
+[A Hybrid Combining Hard and Soft Robots](./papers/A_Hybrid_Combining_Hard_and_Soft_Robots.pdf)
 
-[An Untethered Miniature Origami Robot that Self-folds, Walks, Swims, and Degrades](./paper/An_Untethered_miniature_Origami_Robot.pdf)
+[An Untethered Miniature Origami Robot that Self-folds, Walks, Swims, and Degrades](./papers/An_Untethered_Miniature_Origami_Robot.pdf)
 
-[A Brief History of Oribotics](./paper/A_Brief_History_of_Oribotics.pdf)
+[A Brief History of Oribotics](./papers/A_Brief_History_of_Oribotics.pdf)
