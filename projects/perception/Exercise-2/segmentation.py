@@ -8,7 +8,7 @@ from pcl_helper import *
 def pcl_callback(pcl_msg):
     # Callback function for your Point Cloud Subscriber
 
-    # Convert ROS msg to PCL data
+    # Convert ROS msg to PCL data (XYZRGB)
     cloud = ros_to_pcl(pcl_msg)
 
     # Voxel Grid Downsampling
@@ -38,14 +38,18 @@ def pcl_callback(pcl_msg):
     cloud_objects = cloud_filtered.extract(inliers, negative=True)
 
     # Euclidean Clustering
-    white_cloud = XYZRGB_to_XYZ(cloud_objects)  # kdtree only needs XYZ
+
+    # Convert the xyzrgb cloud to only xyz since k-d tree only needs xyz
+    white_cloud = XYZRGB_to_XYZ(cloud_objects)
+    # k-d tree decreases the computation of searching for neighboring points
+    #   PCL's euclidian clustering algo only supports k-d trees
     tree = white_cloud.make_kdtree()
 
     # Create Cluster-Mask Point Cloud to visualize each cluster separately
     ec = white_cloud.make_EuclideanClusterExtraction()
-    cluster_tolerance = 0.01
-    min_cluster_size = 20
-    max_cluster_size = 300
+    cluster_tolerance = 0.05
+    min_cluster_size = 100
+    max_cluster_size = 3000
     ec.set_ClusterTolerance(cluster_tolerance)
     ec.set_MinClusterSize(min_cluster_size)
     ec.set_MaxClusterSize(max_cluster_size)

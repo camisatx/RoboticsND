@@ -14,7 +14,7 @@ cloud = pcl.load_XYZRGB('tabletop.pcd')
 # Create a Voxel Grid filter object for the input point cloud
 vox = cloud.make_voxel_grid_filter()
 
-# Choose a voxel size (also known as leaf size)
+# Choose a voxel size (also known as leaf size) of n cubic meters per voxel
 LEAF_SIZE = 0.01
 
 # Set the voxel (or leaf) size; can adjust size along each dimension
