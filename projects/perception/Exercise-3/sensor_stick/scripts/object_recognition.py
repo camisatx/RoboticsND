@@ -1,10 +1,9 @@
 #!/usr/bin/env python
 
 import numpy as np
+import pickle
 import sklearn
 from sklearn.preprocessing import LabelEncoder
-
-import pickle
 
 from sensor_stick.srv import GetNormals
 from sensor_stick.features import compute_color_histograms
@@ -17,7 +16,8 @@ from sensor_stick.msg import DetectedObject
 from sensor_stick.pcl_helper import *
 
 def get_normals(cloud):
-    get_normals_prox = rospy.ServiceProxy('/feature_extractor/get_normals', GetNormals)
+    get_normals_prox = rospy.ServiceProxy('/feature_extractor/get_normals',
+                                          GetNormals)
     return get_normals_prox(cloud).cluster
 
 # Callback function for your Point Cloud Subscriber

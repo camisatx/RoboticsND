@@ -16,14 +16,15 @@ from sensor_msgs.msg import PointCloud2
 
 
 def get_normals(cloud):
-    get_normals_prox = rospy.ServiceProxy('/feature_extractor/get_normals', GetNormals)
+    get_normals_prox = rospy.ServiceProxy('/feature_extractor/get_normals',
+                                          GetNormals)
     return get_normals_prox(cloud).cluster
 
 
 if __name__ == '__main__':
     rospy.init_node('capture_node')
 
-    models = [\
+    models = [
        'beer',
        'bowl',
        'create',
@@ -36,15 +37,19 @@ if __name__ == '__main__':
     initial_setup()
     labeled_features = []
 
+    capture_attempts = 20
+
     for model_name in models:
         spawn_model(model_name)
 
-        for i in range(5):
+        for i in range(capture_attempts):
             # make five attempts to get a valid a point cloud then give up
             sample_was_good = False
             try_count = 0
             while not sample_was_good and try_count < 5:
+                # Capture the point cloud using the sensor stock RGBD camera
                 sample_cloud = capture_sample()
+                # Convert the ros cloud to a pcl cloud
                 sample_cloud_arr = ros_to_pcl(sample_cloud).to_array()
 
                 # Check for invalid clouds.
@@ -55,7 +60,7 @@ if __name__ == '__main__':
                     sample_was_good = True
 
             # Extract histogram features
-            chists = compute_color_histograms(sample_cloud, using_hsv=False)
+            chists = compute_color_histograms(sample_cloud, using_hsv=True)
             normals = get_normals(sample_cloud)
             nhists = compute_normal_histograms(normals)
             feature = np.concatenate((chists, nhists))
@@ -63,6 +68,4 @@ if __name__ == '__main__':
 
         delete_model()
 
-
     pickle.dump(labeled_features, open('training_set.sav', 'wb'))
-

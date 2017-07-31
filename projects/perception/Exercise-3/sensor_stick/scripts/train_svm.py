@@ -8,14 +8,12 @@ from sklearn.preprocessing import LabelEncoder, StandardScaler
 from sklearn import cross_validation
 from sklearn import metrics
 
-def plot_confusion_matrix(cm, classes,
-                          normalize=False,
-                          title='Confusion matrix',
-                          cmap=plt.cm.Blues):
+def plot_confusion_matrix(cm, classes, normalize=False,
+                          title='Confusion matrix', cmap=plt.cm.Blues):
+    """This function prints and plots the confusion matrix. Normalization can
+    be applied by setting `normalize=True`.
     """
-    This function prints and plots the confusion matrix.
-    Normalization can be applied by setting `normalize=True`.
-    """
+
     plt.imshow(cm, interpolation='nearest', cmap=cmap)
     plt.title(title)
     plt.colorbar()
@@ -63,16 +61,17 @@ encoder = LabelEncoder()
 y_train = encoder.fit_transform(y_train)
 
 # Create classifier
-clf = svm.SVC(kernel='linear')
+clf = svm.SVC(kernel='linear', C=0.1)
 
 # Set up 5-fold cross-validation
-kf = cross_validation.KFold(len(X_train),
-                            n_folds=5,
-                            shuffle=True,
-                            random_state=1)
+#cval = cross_validation.KFold(len(X_train),
+#                              n_folds=5,
+#                              shuffle=True,
+#                              random_state=1)
+cval = cross_validation.LeaveOneOut(len(X_train))
 
 # Perform cross-validation
-scores = cross_validation.cross_val_score(cv=kf,
+scores = cross_validation.cross_val_score(cv=cval,
                                          estimator=clf,
                                          X=X_train, 
                                          y=y_train,
@@ -82,7 +81,7 @@ print('Scores: ' + str(scores))
 print('Accuracy: %0.2f (+/- %0.2f)' % (scores.mean(), 2*scores.std()))
 
 # Gather predictions
-predictions = cross_validation.cross_val_predict(cv=kf,
+predictions = cross_validation.cross_val_predict(cv=cval,
                                           estimator=clf,
                                           X=X_train, 
                                           y=y_train
