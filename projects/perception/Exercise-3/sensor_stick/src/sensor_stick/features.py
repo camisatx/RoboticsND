@@ -83,7 +83,7 @@ def compute_color_histograms(cloud, using_hsv=False):
 
 
 def compute_normal_histograms(normal_cloud):
-    """Compute the normalized histogram feattures from the provided point cloud
+    """Compute the normalized histogram features from the provided point cloud
 
     :param normal_cloud: Point cloud
     :return: Normalized histogram features
