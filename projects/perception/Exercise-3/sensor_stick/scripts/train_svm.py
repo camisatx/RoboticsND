@@ -88,7 +88,7 @@ predictions = cross_validation.cross_val_predict(cv=cval,
                                          )
 
 accuracy_score = metrics.accuracy_score(y_train, predictions)
-print('Accuacy score: %s' % str(accuracy_score))
+print('Accuracy score: %s' % str(accuracy_score))
 
 confusion_matrix = metrics.confusion_matrix(y_train, predictions)
 

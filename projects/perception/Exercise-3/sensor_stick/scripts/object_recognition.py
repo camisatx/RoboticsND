@@ -44,7 +44,7 @@ def pcl_callback(pcl_msg):
     passthrough.set_filter_limits(axis_min, axis_max)
     cloud_filtered = passthrough.filter()
 
-    # RANSAC Plane Segmentation to identify the table
+    # RANSAC Plane Segmentation to identify the table from the objects
     seg = cloud_filtered.make_segmenter()
     seg.set_model_type(pcl.SACMODEL_PLANE)
     seg.set_method_type(pcl.SAC_RANSAC)
@@ -52,19 +52,19 @@ def pcl_callback(pcl_msg):
     seg.set_distance_threshold(max_distance)
     inliers, coefficients = seg.segment()
 
-    # Extract inliers and outliers
+    # Extract inliers (table surface) and outliers (objects)
     cloud_table = cloud_filtered.extract(inliers, negative=False)
     cloud_objects = cloud_filtered.extract(inliers, negative=True)
 
-    # Euclidean Clustering
-
     # Convert the xyzrgb cloud to only xyz since k-d tree only needs xyz
     white_cloud = XYZRGB_to_XYZ(cloud_objects)
-    # k-d tree decreases the computation of searching for neighboring points
+    # k-d tree decreases the computation of searching for neighboring points.
     #   PCL's euclidian clustering algo only supports k-d trees
     tree = white_cloud.make_kdtree()
 
-    # Create Cluster-Mask Point Cloud to visualize each cluster separately
+    # Euclidean clustering used to build individual point clouds for each
+    #   object. The Cluster-Mask point cloud allows each cluster to be
+    #   visualized separately.
     ec = white_cloud.make_EuclideanClusterExtraction()
     ec.set_ClusterTolerance(0.05)
     ec.set_MinClusterSize(100)
@@ -74,46 +74,37 @@ def pcl_callback(pcl_msg):
     #   each cluster (list of lists)
     cluster_indices = ec.Extract()
 
-    # Assign a color corresponding to each segmented object in the scene
+    # Assign a random color to each isolated object in the scene
     cluster_color = get_color_list(len(cluster_indices))
-    color_cluster_point_list = []
-    for j, indices in enumerate(cluster_indices):
-        for i, indice in enumerate(indices):
-            color_cluster_point_list.append([white_cloud[indice][0],
-                                             white_cloud[indice][1],
-                                             white_cloud[indice][2],
-                                             rgb_to_float(cluster_color[j])])
-
-    # Create new cloud containing all clusters, each with a unique color
-    cluster_cloud = pcl.PointCloud_PointXYZRGB()
-    cluster_cloud.from_list(color_cluster_point_list)
-
-    # Convert PCL data to ROS messages
-    ros_cloud_object_cluster = pcl_to_ros(cluster_cloud)
-    ros_cloud = pcl_to_ros(cloud_objects)
-    ros_cloud_table = pcl_to_ros(cloud_table)
-
-    # Publish ROS messages of the final object and table point clouds
-    pcl_objects_cloud_pub.publish(ros_cloud_object_cluster)
-    pcl_objects_pub.publish(ros_cloud)     # original color objects
-    pcl_table_pub.publish(ros_cloud_table)
-
+        
     # Store the detected objects and labels in these lists
     detected_objects_labels = []
     detected_objects = []
+    color_cluster_point_list = []
 
-    # Iterate through each detected object cluster
+    # Iterate through each detected object cluster for object recognition
     for index, pts_list in enumerate(cluster_indices):
+        
+        # Store the object's cloud in this list
+        object_cluster = []
 
         # Create an individual cluster just for the object being processed
-        object_cluster = []
         for i, pts in enumerate(pts_list):
+            # Retrieve cloud values for the x, y, z, rgb object
             object_cluster.append([cloud_objects[pts][0],
                                    cloud_objects[pts][1],
                                    cloud_objects[pts][2],
                                    cloud_objects[pts][3]])
+            
+            # Retrieve cloud values for the x, y, z object, assigning a
+            #   preidentified color to all cloud values
+            color_cluster_point_list.append([white_cloud[pts][0],
+                                             white_cloud[pts][1],
+                                             white_cloud[pts][2],
+                                             rgb_to_float(cluster_color[index])])
 
-        # Convert the list of point cloud features (x, y, z, rgb) into a cloud
+
+        # Convert list of point cloud features (x,y,z,rgb) into a point cloud
         pcl_cluster = pcl.PointCloud_PointXYZRGB()
         pcl_cluster.from_list(object_cluster)
 
@@ -133,7 +124,7 @@ def pcl_callback(pcl_msg):
 
         # Make the prediction, retrieve the label for the result and add it
         #   to detected_objects_labels list
-        prediction = clf.predict(scaler.transform(feature.reshape(1,-1)))
+        prediction = clf.predict(scaler.transform(feature.reshape(1, -1)))
         label = encoder.inverse_transform(prediction)[0]
         detected_objects_labels.append(label)
 
@@ -145,15 +136,25 @@ def pcl_callback(pcl_msg):
         # Add the detected object to the list of detected objects.
         do = DetectedObject()
         do.label = label
-        #do.cloud = ros_cluster
         do.cloud = ros_cloud
         detected_objects.append(do)
 
     rospy.loginfo('Detected {} objects: {}'.format(len(detected_objects_labels), detected_objects_labels))
+    
+    # Create new cloud containing all clusters, each with a unique color
+    cluster_cloud = pcl.PointCloud_PointXYZRGB()
+    cluster_cloud.from_list(color_cluster_point_list)
 
-    # Publish the list of detected objects
-    # This is the output you'll need to complete the upcoming project!
-    detected_objects_pub.publish(detected_objects)
+    # Convert PCL data to ROS messages
+    ros_cloud_object_cluster = pcl_to_ros(cluster_cloud)
+    ros_cloud_objects = pcl_to_ros(cloud_objects)
+    ros_cloud_table = pcl_to_ros(cloud_table)
+
+    # Publish ROS messages of the point clouds and detected objects
+    pcl_objects_cloud_pub.publish(ros_cloud_object_cluster) # solid color objects
+    pcl_objects_pub.publish(ros_cloud_objects)      # original color objects
+    pcl_table_pub.publish(ros_cloud_table)          # table cloud
+    detected_objects_pub.publish(detected_objects)  # detected object labels
 
 if __name__ == '__main__':
 
@@ -166,15 +167,14 @@ if __name__ == '__main__':
                                pcl_callback, queue_size=1)
 
     # Create Publishers
-    # Call them object_markers_pub and detected_objects_pub
-    # Have them publish to "/object_markers" and "/detected_objects", respectively
     object_markers_pub = rospy.Publisher('/object_markers', Marker,
                                          queue_size=1)
     detected_objects_pub = rospy.Publisher('/detected_objects',
                                            DetectedObjectsArray,
                                            queue_size=1)
     pcl_objects_pub = rospy.Publisher('/pcl_objects', PointCloud2, queue_size=1)
-    pcl_objects_cloud_pub = rospy.Publisher('/pcl_objects_cloud', PointCloud2, queue_size=1)
+    pcl_objects_cloud_pub = rospy.Publisher('/pcl_objects_cloud', PointCloud2,
+                                            queue_size=1)
     pcl_table_pub = rospy.Publisher('/pcl_table', PointCloud2, queue_size=1)
 
     # Load model from disk
