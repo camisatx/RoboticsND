@@ -44,11 +44,12 @@ def create_hist(ch1, ch2, ch3, nbins=32, bins_range=(0, 256)):
     return norm_features
 
 
-def compute_color_histograms(cloud, using_hsv=False):
+def compute_color_histograms(cloud, nbins=32, using_hsv=False):
     """Compute the normalized color historgram features from the provided
     point cloud, with the option of converting the RGB data to HSV values.
 
     :param cloud: Point cloud
+    :param nbins: Integer of the number of histogram bins
     :param using_hsv: Optional boolean of whether to convert RGB values to HSV
     :return: Normalized historgram features
     """
@@ -77,15 +78,17 @@ def compute_color_histograms(cloud, using_hsv=False):
     # Create the normalized histogram features based on the channels
     normed_features = create_hist(ch1=channel_1_vals,
                                   ch2=channel_2_vals,
-                                  ch3=channel_3_vals)
+                                  ch3=channel_3_vals,
+                                  nbins=nbins)
     
     return normed_features 
 
 
-def compute_normal_histograms(normal_cloud):
-    """Compute the normalized histogram features from the provided point cloud
+def compute_normal_histograms(normal_cloud, nbins=32):
+    """Compute the normalized histogram feattures from the provided point cloud
 
     :param normal_cloud: Point cloud
+    :param nbins: Integer of the number of histogram bins
     :return: Normalized histogram features
     """
 
@@ -103,6 +106,7 @@ def compute_normal_histograms(normal_cloud):
     # Create the normalized histogram features based on the channels
     normed_features = create_hist(ch1=norm_x_vals,
                                   ch2=norm_y_vals,
-                                  ch3=norm_z_vals)
+                                  ch3=norm_z_vals,
+                                  nbins=nbins)
     
     return normed_features

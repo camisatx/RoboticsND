@@ -39,7 +39,7 @@ def pcl_callback(pcl_msg):
     # PassThrough Filter to isolate the table and objects
     passthrough = cloud_filtered.make_passthrough_filter()
     passthrough.set_filter_field_name('z')
-    axis_min = 0.75
+    axis_min = 0.76
     axis_max = 1.1
     passthrough.set_filter_limits(axis_min, axis_max)
     cloud_filtered = passthrough.filter()
@@ -66,12 +66,9 @@ def pcl_callback(pcl_msg):
 
     # Create Cluster-Mask Point Cloud to visualize each cluster separately
     ec = white_cloud.make_EuclideanClusterExtraction()
-    cluster_tolerance = 0.05
-    min_cluster_size = 100
-    max_cluster_size = 3000
-    ec.set_ClusterTolerance(cluster_tolerance)
-    ec.set_MinClusterSize(min_cluster_size)
-    ec.set_MaxClusterSize(max_cluster_size)
+    ec.set_ClusterTolerance(0.05)
+    ec.set_MinClusterSize(100)
+    ec.set_MaxClusterSize(3000)
     ec.set_SearchMethod(tree)       # Search the k-d tree for clusters
     # Extract indices for each found cluster. This is a list of indices for
     #   each cluster (list of lists)
@@ -93,28 +90,45 @@ def pcl_callback(pcl_msg):
 
     # Convert PCL data to ROS messages
     ros_cloud_object_cluster = pcl_to_ros(cluster_cloud)
-    ros_cloud_objects = pcl_to_ros(cloud_objects)
+    ros_cloud = pcl_to_ros(cloud_objects)
     ros_cloud_table = pcl_to_ros(cloud_table)
 
     # Publish ROS messages of the final object and table point clouds
     pcl_objects_cloud_pub.publish(ros_cloud_object_cluster)
-    pcl_objects_pub.publish(ros_cloud_objects)
+    pcl_objects_pub.publish(ros_cloud)     # original color objects
     pcl_table_pub.publish(ros_cloud_table)
 
-    # Classify the clusters (loop through each detected cluster one at a time)
+    # Store the detected objects and labels in these lists
     detected_objects_labels = []
     detected_objects = []
+
+    # Iterate through each detected object cluster
     for index, pts_list in enumerate(cluster_indices):
-        # Grab the points for the cluster
-        pcl_cluster = cloud_filtered.extract(pts_list, negative=True)
+
+        # Create an individual cluster just for the object being processed
+        object_cluster = []
+        for i, pts in enumerate(pts_list):
+            object_cluster.append([cloud_objects[pts][0],
+                                   cloud_objects[pts][1],
+                                   cloud_objects[pts][2],
+                                   cloud_objects[pts][3]])
+
+        # Convert the list of point cloud features (x, y, z, rgb) into a cloud
+        pcl_cluster = pcl.PointCloud_PointXYZRGB()
+        pcl_cluster.from_list(object_cluster)
 
         # Convert the cluster from pcl to ROS using helper function
         ros_cloud = pcl_to_ros(pcl_cluster)
+        #pcl_objects_pub.publish(ros_cloud)
 
         # Extract histogram features (similar to capture_features.py)
-        chists = compute_color_histograms(ros_cloud, using_hsv=True)
+        histogram_bins = 64
+        chists = compute_color_histograms(ros_cloud,
+                                          nbins=histogram_bins,
+                                          using_hsv=True)
         normals = get_normals(ros_cloud)
-        nhists = compute_normal_histograms(normals)
+        nhists = compute_normal_histograms(normals,
+                                           nbins=histogram_bins)
         feature = np.concatenate((chists, nhists))
 
         # Make the prediction, retrieve the label for the result and add it
@@ -132,7 +146,7 @@ def pcl_callback(pcl_msg):
         do = DetectedObject()
         do.label = label
         #do.cloud = ros_cluster
-        do.cloud = ros_cloud_object_cluster
+        do.cloud = ros_cloud
         detected_objects.append(do)
 
     rospy.loginfo('Detected {} objects: {}'.format(len(detected_objects_labels), detected_objects_labels))
@@ -156,12 +170,12 @@ if __name__ == '__main__':
     # Have them publish to "/object_markers" and "/detected_objects", respectively
     object_markers_pub = rospy.Publisher('/object_markers', Marker,
                                          queue_size=1)
-    detected_objects_pub = rospy.Publisher('/detected_objects', Marker,
+    detected_objects_pub = rospy.Publisher('/detected_objects',
+                                           DetectedObjectsArray,
                                            queue_size=1)
     pcl_objects_pub = rospy.Publisher('/pcl_objects', PointCloud2, queue_size=1)
     pcl_objects_cloud_pub = rospy.Publisher('/pcl_objects_cloud', PointCloud2, queue_size=1)
     pcl_table_pub = rospy.Publisher('/pcl_table', PointCloud2, queue_size=1)
-
 
     # Load model from disk
     model = pickle.load(open('model.sav', 'rb'))

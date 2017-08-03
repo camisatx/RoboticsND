@@ -64,11 +64,11 @@ y_train = encoder.fit_transform(y_train)
 clf = svm.SVC(kernel='linear', C=0.1)
 
 # Set up 5-fold cross-validation
-#cval = cross_validation.KFold(len(X_train),
-#                              n_folds=5,
-#                              shuffle=True,
-#                              random_state=1)
-cval = cross_validation.LeaveOneOut(len(X_train))
+cval = cross_validation.KFold(len(X_train),
+                              n_folds=50,
+                              shuffle=True,
+                              random_state=30)
+#cval = cross_validation.LeaveOneOut(len(X_train))
 
 # Perform cross-validation
 scores = cross_validation.cross_val_score(cv=cval,
@@ -77,7 +77,7 @@ scores = cross_validation.cross_val_score(cv=cval,
                                          y=y_train,
                                          scoring='accuracy'
                                         )
-print('Scores: ' + str(scores))
+print('Scores: %s' % str(scores))
 print('Accuracy: %0.2f (+/- %0.2f)' % (scores.mean(), 2*scores.std()))
 
 # Gather predictions
@@ -88,12 +88,11 @@ predictions = cross_validation.cross_val_predict(cv=cval,
                                          )
 
 accuracy_score = metrics.accuracy_score(y_train, predictions)
-print('accuacy score: '+str(accuracy_score))
+print('Accuacy score: %s' % str(accuracy_score))
 
 confusion_matrix = metrics.confusion_matrix(y_train, predictions)
 
 class_names = encoder.classes_.tolist()
-
 
 #Train the classifier
 clf.fit(X=X_train, y=y_train)

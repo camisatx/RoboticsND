@@ -35,12 +35,10 @@ def capture_sample():
         Returns: 
             PointCloud2: a single point cloud from the RGBD camrea
     """
+    get_model_state_prox = rospy.ServiceProxy('gazebo/get_model_state',GetModelState)
+    model_state = get_model_state_prox('training_model','world')
 
-    get_model_state_prox = rospy.ServiceProxy('gazebo/get_model_state',
-                                              GetModelState)
-    model_state = get_model_state_prox('training_model', 'world')
-    set_model_state_prox = rospy.ServiceProxy('gazebo/set_model_state',
-                                              SetModelState)
+    set_model_state_prox = rospy.ServiceProxy('gazebo/set_model_state', SetModelState)
 
     roll = random.uniform(0, 2*math.pi)
     pitch = random.uniform(0, 2*math.pi)

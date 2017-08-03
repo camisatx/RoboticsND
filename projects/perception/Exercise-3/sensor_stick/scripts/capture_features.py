@@ -37,7 +37,8 @@ if __name__ == '__main__':
     initial_setup()
     labeled_features = []
 
-    capture_attempts = 20
+    capture_attempts = 30
+    histogram_bins = 64
 
     for model_name in models:
         spawn_model(model_name)
@@ -60,9 +61,14 @@ if __name__ == '__main__':
                     sample_was_good = True
 
             # Extract histogram features
-            chists = compute_color_histograms(sample_cloud, using_hsv=True)
+            chists = compute_color_histograms(sample_cloud,
+                                              nbins=histogram_bins,
+                                              using_hsv=True)
+
             normals = get_normals(sample_cloud)
-            nhists = compute_normal_histograms(normals)
+            nhists = compute_normal_histograms(normals,
+                                               nbins=histogram_bins)
+
             feature = np.concatenate((chists, nhists))
             labeled_features.append([feature, model_name])
 
