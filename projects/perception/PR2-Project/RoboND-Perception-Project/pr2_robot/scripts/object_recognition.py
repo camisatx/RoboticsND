@@ -80,7 +80,7 @@ def pcl_callback(pcl_msg):
     # Set the number of neighboring points to analyze for any given point
     outlier_filter.set_mean_k(50)
     # Any point with a mean distance larger than global will be considered out
-    outlier_filter.set_std_dev_mul_thresh(1.0)
+    outlier_filter.set_std_dev_mul_thresh(0.5)
     cloud_filtered = outlier_filter.filter()
 
     # Voxel Grid Downsampling
@@ -89,13 +89,21 @@ def pcl_callback(pcl_msg):
     vox.set_leaf_size(LEAF_SIZE, LEAF_SIZE, LEAF_SIZE)
     cloud_filtered = vox.filter()
 
-    # PassThrough Filter to isolate the table and objects
-    passthrough = cloud_filtered.make_passthrough_filter()
-    passthrough.set_filter_field_name('z')
-    axis_min = 0.76
-    axis_max = 1.1
-    passthrough.set_filter_limits(axis_min, axis_max)
-    cloud_filtered = passthrough.filter()
+    # PassThrough Filter to remove the areas on the side of the table
+    passthrough_y = cloud_filtered.make_passthrough_filter()
+    passthrough_y.set_filter_field_name('y')
+    y_axis_min = -0.4
+    y_axis_max = 0.4
+    passthrough_y.set_filter_limits(y_axis_min, y_axis_max)
+    cloud_filtered = passthrough_y.filter()
+
+    # PassThrough Filter to isolate only the objects on the table surface
+    passthrough_z = cloud_filtered.make_passthrough_filter()
+    passthrough_z.set_filter_field_name('z')
+    z_axis_min = 0.6
+    z_axis_max = 0.9
+    passthrough_z.set_filter_limits(z_axis_min, z_axis_max)
+    cloud_filtered = passthrough_z.filter()
 
     # RANSAC Plane Segmentation to identify the table from the objects
     seg = cloud_filtered.make_segmenter()
@@ -209,28 +217,46 @@ def pcl_callback(pcl_msg):
     pcl_table_pub.publish(ros_cloud_table)          # table cloud
     detected_objects_pub.publish(detected_objects)  # detected object labels
 
-    # Suggested location for where to invoke your pr2_mover() function within pcl_callback()
-    # Could add some logic to determine whether or not your object detections are robust
-    # before calling pr2_mover()
     try:
+        # Add some logic to determine whether or not your object detections
+        #   are robust enough before calling pr2_mover()
         pr2_mover(detected_objects)
     except rospy.ROSInterruptException:
         pass
 
-# function to load parameters and request PickPlace service
+
 def pr2_mover(object_list):
+    """Cycle through each object provided in the object list, moving the
+    correct arm to pickup the object.
+    
+    Function to load parameters and request PickPlace service
 
-    # TODO: Initialize variables
+    :param object_list: List of detected objects
+    """
 
-    # TODO: Get/Read parameters
+    # Initialize variables
+    labels = []
+    centroids = []      # List of tuples (x, y, z)
 
-    # TODO: Parse parameters into individual variables
+    # Load the parameters from the object list
+    object_list_param = rospy.get_param('/object_list')
+
+    # Parse parameters into individual variables
+    object_name = object_list_param[i]['name']
+    object_group = object_list_param[i]['group']
 
     # TODO: Rotate PR2 in place to capture side tables for the collision map
 
-    # TODO: Loop through the pick list
+    # Loop through the object pick list
+    for object_val in object_list:
 
-        # TODO: Get the PointCloud for a given object and obtain it's centroid
+        labels.append(object_val.label)
+
+        # Get the PointCloud for the object and obtain it's centroid (the
+        #   average position of all points in the object cloud). Convert the
+        #   cloud to an array, then calculate the average of the array.
+        points_array = ros_to_pcl(object_val.cloud).to_array()
+        centroids.append(np.asscalar(np.mean(points_array, axis=0)[:3]))
 
         # TODO: Create 'place_pose' for the object
 

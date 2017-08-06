@@ -37,3 +37,17 @@ I am able to achieve an accuracy of 92% (+/- 27%), which is sufficient for the p
 ## PR2 Object Processing
 
 The PR2 robot is able to operate with the `model.sav` file.
+
+To test the PR2 object recognition script, fir launch the Gazebo environment:
+
+```bash
+roslaunch pr2_robot pick_place_project.launch
+```
+
+Then run the object recognition script:
+
+```bash
+rosrun pr2_robot object_recognition.py
+```
+
+To only view the table and objects, uncheck the `RobotModel` and `MotionPlanning` settings in Rviz.
