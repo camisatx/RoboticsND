@@ -100,7 +100,7 @@ def pcl_callback(pcl_msg):
     # PassThrough Filter to isolate only the objects on the table surface
     passthrough_z = cloud_filtered.make_passthrough_filter()
     passthrough_z.set_filter_field_name('z')
-    z_axis_min = 0.6
+    z_axis_min = 0.61
     z_axis_max = 0.9
     passthrough_z.set_filter_limits(z_axis_min, z_axis_max)
     cloud_filtered = passthrough_z.filter()
@@ -229,57 +229,109 @@ def pr2_mover(object_list):
     """Cycle through each object provided in the object list, moving the
     correct arm to pickup the object.
     
-    Function to load parameters and request PickPlace service
+    Function to load parameters and request PickPlace service.
 
     :param object_list: List of detected objects
     """
 
-    # Initialize variables
-    labels = []
-    centroids = []      # List of tuples (x, y, z)
+    # Initialize output list that'll store multiple object yaml dictionaries
+    output_list = []
 
-    # Load the parameters from the object list
+    # Load the parameters from the YAML files located in /pr2_robot/config/
     object_list_param = rospy.get_param('/object_list')
-
-    # Parse parameters into individual variables
-    object_name = object_list_param[i]['name']
-    object_group = object_list_param[i]['group']
+    dropbox_list_param = rospy.get_param('/dropbox')
 
     # TODO: Rotate PR2 in place to capture side tables for the collision map
 
-    # Loop through the object pick list
-    for object_val in object_list:
+    # Iterate through all objects that should be moved
+    for object_params in object_list_param:
+        object_name = object_params['name']
+        object_group = object_params['group']
 
-        labels.append(object_val.label)
+        # Check if the object to be moved was found in the perception analysis,
+        #   populating the pick_pose message if it was
+        for object_i, object_val in enumerate(object_list):
+            if object_name != object_val.label:
+                # Skip this object b/c it doesn't match the object to be moved
+                continue
 
-        # Get the PointCloud for the object and obtain it's centroid (the
-        #   average position of all points in the object cloud). Convert the
-        #   cloud to an array, then calculate the average of the array.
-        points_array = ros_to_pcl(object_val.cloud).to_array()
-        centroids.append(np.asscalar(np.mean(points_array, axis=0)[:3]))
+            # Assign the scene number
+            ros_scene_num = Int32()
+            # TODO: Figure out what parameter holds the scene data
+            #ros_scene_num.data = rospy.get_param('/world_name')
+            test_num = 1
+            ros_scene_num.data = test_num
 
-        # TODO: Create 'place_pose' for the object
+            # Assign the object name
+            ros_object_name = String()
+            ros_object_name.data = object_name
 
-        # TODO: Assign the arm to be used for pick_place
+            # Assign the arm that'll be used to pickup the object
+            ros_arm_to_use = String()
+            if object_group == 'green':
+                # The green bin is on the robot's right
+                ros_arm_to_use.data = 'right'
+            else:
+                # The red bin is on the robot's left
+                ros_arm_to_use.data = 'left'
+            
+            # Get the PointCloud for the object and obtain it's centroid
+            #   (the average position of all points in the object cloud).
+            #   Convert the cloud to an array, then calculate the average
+            #   of the array.
+            points_array = ros_to_pcl(object_val.cloud).to_array()
+            centroid_numpy = np.mean(points_array, axis=0)[:3]
+            # Convert the numpy float64 to native python floats
+            centroid = [np.asscalar(x) for x in centroid_numpy]
 
-        # TODO: Create a list of dictionaries (made with make_yaml_dict()) for later output to yaml format
+            # Assign the object pick pose
+            ros_pick_pose = Pose()
+            ros_pick_pose.position.x = centroid[0]
+            ros_pick_pose.position.y = centroid[1]
+            ros_pick_pose.position.z = centroid[2]
 
-        # Wait for 'pick_place_routine' service to come up
-        rospy.wait_for_service('pick_place_routine')
+            # Find the correct dropbox's position
+            box_pos = [0, 0, 0]     # Set a default box position
+            for box_params in dropbox_list_param:
+                if box_params['group'] == object_group:
+                    box_pos = box_params['position']
+                    break
 
-        try:
-            pick_place_routine = rospy.ServiceProxy('pick_place_routine', PickPlace)
+            # Assign the dropbox pose
+            ros_place_pos = Pose()
+            ros_place_pos.position.x = box_pos[0]
+            ros_place_pos.position.y = box_pos[1]
+            ros_place_pos.position.z = box_pos[2]
 
-            # TODO: Insert your message variables to be sent as a service request
-            resp = pick_place_routine(TEST_SCENE_NUM, OBJECT_NAME, WHICH_ARM, PICK_POSE, PLACE_POSE)
+            # Add the object's yaml dict to the output_list
+            obj_yaml_dict = make_yaml_dict(ros_scene_num, ros_arm_to_use,
+                                           ros_object_name, ros_pick_pose,
+                                           ros_place_pos)
+            output_list.append(obj_yaml_dict)
 
-            print ("Response: ",resp.success)
+            ## Wait for 'pick_place_routine' service to come up
+            #rospy.wait_for_service('pick_place_routine')
+            ## Uses /srv/PickPlace.srv file
+            #pick_place_routine = rospy.ServiceProxy('pick_place_routine',
+            #                                        PickPlace)
+            #try:
+            #    # Insert the message variables to be sent as a service request
+            #    resp = pick_place_routine(ros_scene_num, ros_object_name,
+            #                              ros_arm_to_use, ros_pick_pose,
+            #                              ros_place_pos)
 
-        except rospy.ServiceException, e:
-            print "Service call failed: %s"%e
+            #    print("Response: ", resp.success)
+            #except rospy.ServiceException, e:
+            #    print("Service call failed: %s" % e)
 
-    # TODO: Output your request parameters into output yaml file
+            # Remove the object from object_list to indicate it was picked up
+            del object_list[object_i]
+            
+            # Stop looking through the other identified objects
+            break
 
+    # Output your request parameters into an output yaml file
+    send_to_yaml('output_%i.yaml' % test_num, output_list)
 
 
 if __name__ == '__main__':
