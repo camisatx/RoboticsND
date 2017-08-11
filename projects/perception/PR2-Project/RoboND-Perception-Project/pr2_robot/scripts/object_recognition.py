@@ -78,9 +78,9 @@ def pcl_callback(pcl_msg):
     # Statistical outlier filtering
     outlier_filter = cloud.make_statistical_outlier_filter()
     # Set the number of neighboring points to analyze for any given point
-    outlier_filter.set_mean_k(50)
+    outlier_filter.set_mean_k(20)
     # Any point with a mean distance larger than global will be considered out
-    outlier_filter.set_std_dev_mul_thresh(0.5)
+    outlier_filter.set_std_dev_mul_thresh(0.1)
     cloud_filtered = outlier_filter.filter()
 
     # Voxel Grid Downsampling
@@ -247,6 +247,7 @@ def pr2_mover(object_list):
     for object_params in object_list_param:
         object_name = object_params['name']
         object_group = object_params['group']
+        print('need to move %s' % object_name)
 
         # Check if the object to be moved was found in the perception analysis,
         #   populating the pick_pose message if it was
@@ -259,7 +260,7 @@ def pr2_mover(object_list):
             ros_scene_num = Int32()
             # TODO: Figure out what parameter holds the scene data
             #ros_scene_num.data = rospy.get_param('/world_name')
-            test_num = 1
+            test_num = 3
             ros_scene_num.data = test_num
 
             # Assign the object name
@@ -308,6 +309,7 @@ def pr2_mover(object_list):
                                            ros_object_name, ros_pick_pose,
                                            ros_place_pos)
             output_list.append(obj_yaml_dict)
+            print('processed %s' % ros_object_name.data)
 
             ## Wait for 'pick_place_routine' service to come up
             #rospy.wait_for_service('pick_place_routine')
