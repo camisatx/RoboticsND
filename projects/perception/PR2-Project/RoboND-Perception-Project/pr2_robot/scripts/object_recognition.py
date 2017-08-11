@@ -241,13 +241,20 @@ def pr2_mover(object_list):
     object_list_param = rospy.get_param('/object_list')
     dropbox_list_param = rospy.get_param('/dropbox')
 
-    # TODO: Rotate PR2 in place to capture side tables for the collision map
+    # TODO: Get this PR2 rotation working
+    ## Rotate PR2 in place to capture side tables for the collision map. The
+    ##   world_joint_controller controls the revolute joing world_joint between
+    ##   the robot's base_footprint and world coordinate frames
+    #pub_j1 = rospy.Publisher('/pr2/world_joint_controller/command',
+    #                         Float64, queue_size=10)
+    #pub_j1.publish(np.pi/2)     # Rotate the PR2 counter-clockwise 90 deg
+    #pub_j1.publish(-np.pi)      # Rotate the PR2 clockwise 180 deg
+    #pub_j1.publish(np.pi/2)     # Rotate the PR2 back to neutral position
 
     # Iterate through all objects that should be moved
     for object_params in object_list_param:
         object_name = object_params['name']
         object_group = object_params['group']
-        print('need to move %s' % object_name)
 
         # Check if the object to be moved was found in the perception analysis,
         #   populating the pick_pose message if it was
@@ -297,6 +304,7 @@ def pr2_mover(object_list):
                 if box_params['group'] == object_group:
                     box_pos = box_params['position']
                     break
+            # TODO: Add a random offset to the dropbox's position
 
             # Assign the dropbox pose
             ros_place_pos = Pose()
@@ -333,7 +341,7 @@ def pr2_mover(object_list):
             break
 
     # Output your request parameters into an output yaml file
-    send_to_yaml('output_%i.yaml' % test_num, output_list)
+    #send_to_yaml('output_%i.yaml' % test_num, output_list)
 
 
 if __name__ == '__main__':
