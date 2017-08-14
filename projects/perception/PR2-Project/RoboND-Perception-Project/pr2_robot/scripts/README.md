@@ -54,7 +54,7 @@ To only view the table and objects, uncheck the `RobotModel` and `MotionPlanning
 
 ### Change Simulated Environment
 
-To change the objects on the table, open [pick_place_project.launch](./launch/pick_place_project.launch) in the launch folder, and change:
+To change the objects on the table, open [pick_place_project.launch](./../launch/pick_place_project.launch) in the launch folder, and change:
 
 - `test1` to `test2` or `test3` on line 13
 - `pick_list_1` to `pick_list_2` or `pick_list_3` on line 39
