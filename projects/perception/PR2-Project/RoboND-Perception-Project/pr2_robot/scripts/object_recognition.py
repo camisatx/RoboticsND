@@ -74,6 +74,7 @@ def pcl_callback(pcl_msg):
 
     # Convert ROS msg to PCL data (XYZRGB)
     cloud = ros_to_pcl(pcl_msg)
+    #pcl.save(cloud, './misc/pipeline_0_raw_cloud.pcd')
 
     # Statistical outlier filtering
     outlier_filter = cloud.make_statistical_outlier_filter()
@@ -82,12 +83,14 @@ def pcl_callback(pcl_msg):
     # Any point with a mean distance larger than global will be considered out
     outlier_filter.set_std_dev_mul_thresh(0.1)
     cloud_filtered = outlier_filter.filter()
+    #pcl.save(cloud_filtered, './misc/pipeline_1_outlier_removal_filter.pcd')
 
     # Voxel Grid Downsampling
     vox = cloud_filtered.make_voxel_grid_filter()
     LEAF_SIZE = 0.01
     vox.set_leaf_size(LEAF_SIZE, LEAF_SIZE, LEAF_SIZE)
     cloud_filtered = vox.filter()
+    #pcl.save(cloud_filtered, './misc/pipeline_2_voxel_grid_filter.pcd')
 
     # PassThrough Filter to remove the areas on the side of the table
     passthrough_y = cloud_filtered.make_passthrough_filter()
@@ -104,6 +107,7 @@ def pcl_callback(pcl_msg):
     z_axis_max = 0.9
     passthrough_z.set_filter_limits(z_axis_min, z_axis_max)
     cloud_filtered = passthrough_z.filter()
+    #pcl.save(cloud_filtered, './misc/pipeline_3_passthrough_filter.pcd')
 
     # RANSAC Plane Segmentation to identify the table from the objects
     seg = cloud_filtered.make_segmenter()
@@ -116,6 +120,8 @@ def pcl_callback(pcl_msg):
     # Extract inliers (table surface) and outliers (objects)
     cloud_table = cloud_filtered.extract(inliers, negative=False)
     cloud_objects = cloud_filtered.extract(inliers, negative=True)
+    #pcl.save(cloud_table, './misc/pipeline_4_extracted_inliers.pcd')
+    #pcl.save(cloud_objects, './misc/pipeline_5_extracted_outliers.pcd')
 
     # Convert the xyzrgb cloud to only xyz since k-d tree only needs xyz
     white_cloud = XYZRGB_to_XYZ(cloud_objects)
@@ -341,7 +347,7 @@ def pr2_mover(object_list):
             break
 
     # Output your request parameters into an output yaml file
-    #send_to_yaml('output_%i.yaml' % test_num, output_list)
+    send_to_yaml('output_%i.yaml' % test_num, output_list)
 
 
 if __name__ == '__main__':

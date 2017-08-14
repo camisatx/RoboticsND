@@ -51,3 +51,12 @@ rosrun pr2_robot object_recognition.py
 ```
 
 To only view the table and objects, uncheck the `RobotModel` and `MotionPlanning` settings in Rviz.
+
+### Change Simulated Environment
+
+To change the objects on the table, open [pick_place_project.launch](./launch/pick_place_project.launch) in the launch folder, and change:
+
+- `test1` to `test2` or `test3` on line 13
+- `pick_list_1` to `pick_list_2` or `pick_list_3` on line 39
+
+Relaunch the Gazebo environment for the new objects to be loaded.
