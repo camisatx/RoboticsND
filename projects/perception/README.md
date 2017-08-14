@@ -4,7 +4,7 @@
 [pipeline_2_voxel_grid_filter]: ./misc/pipeline_2_voxel_grid_filter.png
 [pipeline_3_passthrough_filter]: ./misc/pipeline_3_passthrough_filter.png
 [pipeline_4_extracted_inliers]: ./misc/pipeline_4_extracted_inliers.png
-[pipeline_5_extracted_outliers]: ./misc/pipeline_5_extracteed_outliers.png
+[pipeline_5_extracted_outliers]: ./misc/pipeline_5_extracted_outliers.png
 [dbscan_object_cluster]: ./misc/dbscan_objeect_cluster.png
 [confusion_matrices]: ./misc/confusion_matrices.png
 [test_1_object_recognition]: ./misc/test_1_object_recognition.png
@@ -113,15 +113,15 @@ Color histograms are used to measure how each object looks when captured as an i
 
 The code for building the histograms can be found in [features.py](PR2-Project/sensor_stick/src/sensor_stick/features.py).
 
-The [capture_features_pr2.py](PR2-Project/sensor_stick/scripts/capture_features_pr2.py) script saved the object features to a file named `training_set_pr2.sav`. It captured each object in 50 random orientations, using the HSV color space and 128 bins when creating the image histograms.
+The [capture_features_pr2.py](PR2-Project/sensor_stick/scripts/capture_features_pr2.py) script saved the object features to a file named `training_set_pr2.sav`. It captured each object in *50* random orientations, using the *HSV* color space and *128* bins when creating the image histograms.
 
 ### Train SVM Model
 
-A support vector machine (SVM) is used to train the model (specifically a SVC). The SVM loads the training set generated from the capture_features_pr2.py script, and prepares the raw data for classification. I found that a linear kernel using a C value of 0.1 builds a model with good accuracy.
+A support vector machine (SVM) is used to train the model (specifically a SVC). The SVM loads the training set generated from the `capture_features_pr2.py` script, and prepares the raw data for classification. I found that a *linear kernel* using a C value of *0.1* builds a model with good accuracy.
 
-I experimented with cross validation of the model and found that a 50 fold cross validation worked best. A leave one out cross validation strategy provided marginally better accuracy results, however it required much longer to process.
+I experimented with cross validation of the model and found that a *50* fold cross validation worked best. A leave one out cross validation strategy provided marginally better accuracy results, however it required much longer to process.
 
-In the end, I was able to generate an accuracy score of 92%. The [train_svm.py](PR2-Project/RoboND-Perception-Project/pr2/robot/scripts/train_svm.py) script trained the SVM, saving the final model as `model.sav`.
+In the end, I was able to generate an accuracy score of 92%. The [train_svm.py](PR2-Project/RoboND-Perception-Project/pr2_robot/scripts/train_svm.py) script trained the SVM, saving the final model as `model.sav`.
 
 The confusion matrices below shows the non-normalized and normalized results for a test case using the trained model generated above.
 
