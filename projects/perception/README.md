@@ -1,4 +1,5 @@
 [//]: # (Image References)
+[pr2_robot]: ./misc/pr2_robot.png
 [pipeline_0_raw_cloud]: ./misc/pipeline_0_raw_cloud.png
 [pipeline_1_outlier_removal_filter]: ./misc/pipeline_1_outlier_removal_filter.png
 [pipeline_2_voxel_grid_filter]: ./misc/pipeline_2_voxel_grid_filter.png
@@ -13,6 +14,8 @@
 
 # 3D Perception Project
 ---
+
+![pr2 robot][pr2_robot]
 
 This project focuses on 3D perception using a PR2 robot simulation utilizing an RGB-D camera. The goal of perception is to convert sensor input into a point cloud image where specific objects can be identified and isolated.
 
