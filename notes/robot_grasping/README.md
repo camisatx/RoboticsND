@@ -55,7 +55,11 @@ A DIY implementation of a slip detection algorithm would require data from tacti
 ### Sources
 
 [Robotic Grasping and Contact: A Review](./papers/Robotic_Grasping_and_Contact.pdf)
+
 [Universal robotic gripper based on the jamming of granular material](./papers/Universal_robotic_gripper_based_on_the_jamming_of_granular_material.pdf)
+
 [Dex-Net 2.0: Deep Learning to Plan Robust Grasps with Synthetic Point Clouds and Analytic Grasp Metrics](./papers/Dex-Neet_2_0_Deep_Learning_to_Plan_Robust_Grasps.pdf)
+
 [Learning Hand-Eye Coordination for Robotic Grasping with Large-Scale Data Collection](./papers/Learning_Hand_Eye_Coordination_for_Robotic_Grasping.pdf)
+
 [A slip detection and correction strategy for precision robot grasping](./papers/A_slip_detection_and_correction_strategy_for_precision_robot_grasping.pdf)
