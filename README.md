@@ -10,14 +10,15 @@ The scripts used to setup the Jupyter Notebook environment is also stored here. 
 
 #### Projects
 
-Projects I've included include:
+Projects I've worked on include:
 - [Search and sample return](../master/projects/search_and_sample_return)
 - [Reinforcement learning](../master/projects/learning)
 - [OpenAI Gym](../master/projects/gym)
 - [Kinematics](../master/projects/kinematics/README.md)
     - [Kuka KR210 Pick and Place Challenge](../master/projects/kinematics/kuka_kr210/README.md)
 - [Iceberg Tracker Prototype](../master/projects/Iceberg_Tracker/README.md)
-- [Perception](../master/projects/perception/README.md)
+- [Perception - PR2 3D Perception Challenge](../master/projects/perception/README.md)
+- [Control](../master/projects/controls/README.md)
 
 #### Notes
 
@@ -25,6 +26,7 @@ The notes section includes Markdown files that have personal notes from research
 - [Bio inspired robots](../master/notes/bio_inspired)
 - [Human robot interaction](../master/notes/human_robot_interaction)
 - [Soft robots](../master/notes/soft_robots/README.md)
+- [Robot Grasping](../master/notes/robot_grasping/README.md)
 
 ## Future
 
