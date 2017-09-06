@@ -1,0 +1,146 @@
+#!/usr/bin/env python
+
+# Copyright (C) 2017 Electric Movement Inc.
+# All Rights Reserved.
+
+# Author: Brandon Kinman
+
+import rospy
+import tf
+import math
+from sensor_msgs.msg import Imu
+from geometry_msgs.msg import Wrench
+from geometry_msgs.msg import Pose
+from geometry_msgs.msg import PoseStamped
+from geometry_msgs.msg import Vector3
+from std_msgs.msg import Float64
+
+from std_srvs.srv import Empty
+from std_srvs.srv import EmptyResponse
+
+from dynamic_reconfigure.server import Server
+from quad_controller.cfg import attitude_controller_paramsConfig
+from quad_controller.pid_controller import PIDController
+
+
+class AttitudeControllerNode():
+    def __init__(self):
+
+        # Roll Controller
+        roll_kp = float(rospy.get_param('~roll_kp', '0'))
+        roll_ki = float(rospy.get_param('~roll_ki', '0'))
+        roll_ki_max = float(rospy.get_param('~roll_ki_max', '0'))
+        roll_kd = float(rospy.get_param('~roll_kd', '0'))
+        self.roll_controller_ = PIDController(roll_kp, roll_ki, roll_kd, roll_ki_max)
+
+        #Pitch Controller
+        pitch_kp = float(rospy.get_param('~pitch_kp', '0'))
+        pitch_ki = float(rospy.get_param('~pitch_ki', '0'))
+        pitch_ki_max = float(rospy.get_param('~pitch_ki_max', '0'))
+        pitch_kd = float(rospy.get_param('~pitch_kd', '0'))
+        self.pitch_controller_ = PIDController(pitch_kp, pitch_ki, pitch_kd, pitch_ki_max)
+
+        # Yaw controller
+        yaw_kp = float(rospy.get_param('~yaw_kp', '0'))
+        yaw_ki = float(rospy.get_param('~yaw_ki', '0'))
+        yaw_ki_max = float(rospy.get_param('~yaw_ki_max', '0'))
+        yaw_kd = float(rospy.get_param('~yaw_kd', '0'))
+        self.yaw_controller_ = PIDController(yaw_kp, yaw_ki, yaw_kd, yaw_ki_max)
+
+        self.last_imu_ = Imu()
+        self.z_thrust_ = 0.0
+
+        self.reset_srv_ = rospy.Service('attitude_controller/controller_reset', Empty, self.controller_reset_callback)
+
+        srv = Server(attitude_controller_paramsConfig, self.config_callback)
+
+        self.imu_sub = rospy.Subscriber("/quad_rotor/imu", Imu, self.imu_callback)
+        self.cmd_force_pub = rospy.Publisher("/quad_rotor/cmd_force", Wrench, queue_size=10)
+        self.cmd_attitude_sub = rospy.Subscriber('/quad_rotor/cmd_attitude', Vector3, self.cmd_attitude_callback)
+        self.cmd_z_thrust_sub = rospy.Subscriber('/quad_rotor/cmd_z_thrust', Float64, self.cmd_z_thrust_callback)
+
+
+    def config_callback(self, config, level):
+        rospy.loginfo('Attitude controller config changed!')
+
+        self.roll_controller_.setKP(config.roll_kp)
+        self.roll_controller_.setKI(config.roll_ki)
+        self.roll_controller_.setMaxWindup(config.roll_ki_max)
+        self.roll_controller_.setKD(config.roll_kd)
+
+        self.pitch_controller_.setKP(config.pitch_kp)
+        self.pitch_controller_.setKI(config.pitch_ki)
+        self.pitch_controller_.setMaxWindup(config.pitch_ki_max)
+        self.pitch_controller_.setKD(config.pitch_kd)
+
+        self.yaw_controller_.setKP(config.yaw_kp)
+        self.yaw_controller_.setKI(config.yaw_ki)
+        self.yaw_controller_.setMaxWindup(config.yaw_ki_max)
+        self.yaw_controller_.setKD(config.yaw_kd)
+
+        # Dynamic Reconfig Setpoint
+        if config.use_dr_set_point:
+            self.roll_controller_.setTarget(config.roll_set_point)
+            self.pitch_controller_.setTarget(config.pitch_set_point)
+            self.yaw_controller_.setTarget(config.yaw_set_point)
+
+        return config
+
+    def controller_reset_callback(self, pid_reset_msg):
+        rospy.loginfo('Attitude controller reset!')
+        self.roll_controller_.reset()
+        self.pitch_controller_.reset()
+        self.yaw_controller_.reset()
+
+        self.last_imu_ = Imu()
+        self.z_thrust_ = 0.0
+        return EmptyResponse()
+
+    def cmd_attitude_callback(self, attitude_vector):
+        self.roll_controller_.setTarget(attitude_vector.x)
+        self.pitch_controller_.setTarget(attitude_vector.y)
+        self.yaw_controller_.setTarget(attitude_vector.z)
+
+    def cmd_z_thrust_callback(self, cmd_z_thrust):
+        self.z_thrust_ = cmd_z_thrust.data
+
+    def imu_callback(self, imu_msg):
+        self.last_imu_ = imu_msg
+        self.update()
+
+    def update(self):
+        (roll_meas, pitch_meas, yaw_meas) = tf.transformations.euler_from_quaternion([self.last_imu_.orientation.x,
+                                                                                      self.last_imu_.orientation.y,
+                                                                                      self.last_imu_.orientation.z,
+                                                                                      self.last_imu_.orientation.w])
+
+
+        t = self.last_imu_.header.stamp.to_sec()
+        roll_cmd = self.roll_controller_.update(roll_meas, t)
+        pitch_cmd = self.pitch_controller_.update(pitch_meas, t)
+        yaw_cmd = self.yaw_controller_.update(yaw_meas, t)
+
+
+        rospy.logdebug('roll meas:{},pitch_meas:{},yaw_meas:{},x:{},y:{},z:{},w:{}'.format(roll_meas,pitch_meas,yaw_meas,
+                                                                                          self.last_imu_.orientation.x,
+                                                                                          self.last_imu_.orientation.y,
+                                                                                          self.last_imu_.orientation.z,
+                                                                                          self.last_imu_.orientation.w))
+
+        rospy.logdebug('In degrees: r:{},p:{},y:{}'.format(math.degrees(roll_meas), math.degrees(pitch_meas), math.degrees(yaw_meas)))
+
+        wrench_cmd = Wrench()
+        wrench_cmd.torque.x = roll_cmd
+        wrench_cmd.torque.y = pitch_cmd
+        wrench_cmd.torque.z = yaw_cmd
+        wrench_cmd.force.z = self.z_thrust_
+
+        self.cmd_force_pub.publish(wrench_cmd)
+
+if __name__ == '__main__':
+    rospy.init_node('attitude_controller')
+    try:
+        ac = AttitudeControllerNode()
+        rospy.spin()
+    except rospy.ROSInterruptException:
+        pass

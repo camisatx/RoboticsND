@@ -1,0 +1,14 @@
+roll_kp: 0.0
+roll_ki: 0.0
+roll_ki_max: 0.0
+roll_kd: 0.0
+
+pitch_kp: 0.0
+pitch_ki: 0.0
+pitch_ki_max: 0.0
+pitch_kd: 0.0
+
+yaw_kp: 0.0
+yaw_ki: 0.0
+yaw_ki_max: 0.0
+yaw_kd: 0.0

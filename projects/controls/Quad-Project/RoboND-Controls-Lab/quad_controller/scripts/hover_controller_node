@@ -1,0 +1,60 @@
+#!/usr/bin/env python
+
+# Copyright (C) 2017 Electric Movement Inc.
+# All Rights Reserved.
+
+# Author: Brandon Kinman
+
+import rospy
+import tf
+import math
+from geometry_msgs.msg import Wrench
+from geometry_msgs.msg import PoseStamped
+from quad_controller.pid_controller import PIDController
+
+from dynamic_reconfigure.server import Server
+from quad_controller.cfg import hover_controller_paramsConfig
+
+class HoverControllerNode():
+    def __init__(self):
+        self.prev_time = rospy.Time.now()
+
+        # PID Params
+        ki_max = float(rospy.get_param('~ki_max', '20'))
+        kp = float(rospy.get_param('kp', '0'))
+        ki = float(rospy.get_param('ki', '0'))
+        kd = float(rospy.get_param('kd', '0'))
+
+        self.controller_ = PIDController(kp, ki, kd, ki_max)
+
+        self.pose_sub_ = rospy.Subscriber("/quad_rotor/pose", PoseStamped, self.pose_callback)
+        self.cmd_force_pub_ = rospy.Publisher("/quad_rotor/cmd_force", Wrench, queue_size=10)
+
+        srv = Server(hover_controller_paramsConfig, self.config_callback)
+
+    def config_callback(self, config, level):
+        rospy.loginfo("""Reconfigure Request: {target},\
+            {kp}, {ki}, {kd}""".format(**config))
+
+        self.controller_.setTarget(config.target)
+        self.controller_.setKP(config.kp)
+        self.controller_.setKI(config.ki)
+        self.controller_.setMaxWindup(config.ki_max)
+        self.controller_.setKD(config.kd)
+        return config
+
+    def pose_callback(self, pose_msg):
+        z_cmd = self.controller_.update(pose_msg.pose.position.z, pose_msg.header.stamp.to_sec())
+        cmd = Wrench()
+
+        if z_cmd is not None:
+            cmd.force.z = z_cmd
+            self.cmd_force_pub_.publish(cmd)
+
+if __name__ == '__main__':
+    rospy.init_node('hover_controller')
+    try:
+        hc = HoverControllerNode()
+        rospy.spin()
+    except rospy.ROSInterruptException: 
+        pass

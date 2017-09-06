@@ -1,0 +1,10 @@
+<launch>
+
+    <node name="setup_2d_world" pkg="quad_controller" type="setup_2d_hover_world.sh" />
+
+    <node name="hover_controller" pkg="quad_controller" type="hover_controller_node" output="screen" >
+    </node>
+
+    <node name="rqt_reconfigure" pkg="rqt_reconfigure" type="rqt_reconfigure" />
+
+</launch>

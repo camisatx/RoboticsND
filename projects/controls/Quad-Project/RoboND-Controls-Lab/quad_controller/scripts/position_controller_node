@@ -1,0 +1,159 @@
+#!/usr/bin/env python
+
+# Copyright (C) 2017 Electric Movement Inc.
+# All Rights Reserved.
+
+# Author: Brandon Kinman
+
+import rospy
+import tf
+import math
+import numpy as np
+from geometry_msgs.msg import Wrench
+from geometry_msgs.msg import PoseStamped
+from geometry_msgs.msg import Point
+from geometry_msgs.msg import Vector3
+from std_msgs.msg import Float64
+from std_msgs.msg import Bool
+from quad_controller.pid_controller import PIDController
+
+from std_srvs.srv import SetBool
+from std_srvs.srv import SetBoolResponse
+
+from std_srvs.srv import Empty
+from std_srvs.srv import EmptyResponse
+
+from dynamic_reconfigure.server import Server
+from quad_controller.cfg import position_controller_paramsConfig
+
+def limit(value, min_value, max_value):
+    if value > max_value:
+        value = max_value
+    elif value < min_value:
+        value = min_value
+    return value
+
+class PositionControllerNode():
+    def __init__(self):
+        self.first_pose_received_ = False
+
+        # X PID Config
+        x_kp = float(rospy.get_param('x_kp', '0'))
+        x_ki = float(rospy.get_param('x_ki', '0'))
+        x_ki_max = float(rospy.get_param('x_ki_max', '0'))
+        x_kd = float(rospy.get_param('x_kd', '0'))
+        self.x_controller_ = PIDController(x_kp, x_ki, x_kd, x_ki_max)
+
+        # Y PID Config
+        y_kp = float(rospy.get_param('y_kp', '0'))
+        y_ki = float(rospy.get_param('y_ki', '0'))
+        y_ki_max = float(rospy.get_param('y_ki_max', '0'))
+        y_kd = float(rospy.get_param('y_kd', '0'))
+        self.y_controller_ = PIDController(y_kp, y_ki, y_kd, y_ki_max)
+
+        # Z PID Config
+        z_kp = float(rospy.get_param('z_kp', '0'))
+        z_ki = float(rospy.get_param('z_ki', '0'))
+        z_ki_max = float(rospy.get_param('z_ki_max', '0'))
+        z_kd = float(rospy.get_param('z_kd', '0'))
+        self.z_controller_ = PIDController(z_kp, z_ki, z_kd, z_ki_max)
+
+        self.pose_sub_ = rospy.Subscriber('/quad_rotor/pose', PoseStamped, self.pose_callback)
+
+        self.goal_point_sub_ = rospy.Subscriber('/quad_rotor/goal_point', Point, self.goal_point_callback)
+        self.reset_srv_ = rospy.Service('/position_controller/controller_reset', Empty, self.controller_reset_callback)
+
+        self.cmd_z_thrust_pub_ = rospy.Publisher('/quad_rotor/cmd_z_thrust', Float64, queue_size=10)
+        self.cmd_attitude_pub_ = rospy.Publisher('/quad_rotor/cmd_attitude', Vector3, queue_size=10)
+
+        srv = Server(position_controller_paramsConfig, self.config_callback)
+        self.counter = 0
+
+    def config_callback(self, config, level):
+        rospy.loginfo('Position controller node config changed!')
+
+        # X Config Params
+        self.x_controller_.setKP(config.x_kp)
+        self.x_controller_.setKI(config.x_ki)
+        self.x_controller_.setMaxWindup(config.x_ki_max)
+        self.x_controller_.setKD(config.x_kd)
+
+        # Y Config Params
+        self.y_controller_.setKP(config.y_kp)
+        self.y_controller_.setKI(config.y_ki)
+        self.y_controller_.setMaxWindup(config.y_ki_max)
+        self.y_controller_.setKD(config.y_kd)
+
+        # Z Config Params
+        self.z_controller_.setKP(config.z_kp)
+        self.z_controller_.setKI(config.z_ki)
+        self.z_controller_.setMaxWindup(config.z_ki_max)
+        self.z_controller_.setKD(config.z_kd)
+
+        # Dynamic Reconfig Setpoint
+        if config.use_dr_set_point:
+            self.x_controller_.setTarget(config.set_point_x)
+            self.y_controller_.setTarget(config.set_point_y)
+            self.z_controller_.setTarget(config.set_point_z)
+
+        return config
+
+    def controller_reset_callback(self, controller_reset_msg):
+        rospy.loginfo('Position controller reset!')
+        self.x_controller_.reset()
+        self.y_controller_.reset()
+        self.z_controller_.reset()
+        self.first_pose_received = False
+        return EmptyResponse()
+
+    def goal_point_callback(self, goal_point_msg):
+        self.x_controller_.setTarget(goal_point_msg.x)
+        self.y_controller_.setTarget(goal_point_msg.y)
+        self.z_controller_.setTarget(goal_point_msg.z)
+
+    def pose_callback(self, pose_msg):
+
+        if self.counter >= 10 or not self.first_pose_received_:
+            self.counter = 0
+
+            # Initial goal should be starting position.
+            if self.first_pose_received_ is False:
+                self.first_pose_received_ = True
+                self.goal_point_callback(pose_msg.pose.position)
+
+            t = pose_msg.header.stamp.to_sec()
+
+            # Control Roll to to move along Y
+            roll_cmd = -(1/9.81) * self.y_controller_.update(pose_msg.pose.position.y, t)
+
+            # Control Pitch to move along X
+            pitch_cmd = (1/9.81) * self.x_controller_.update(pose_msg.pose.position.x, t)
+
+            # Control Thrust to move along Z
+            thrust = self.z_controller_.update(pose_msg.pose.position.z, t)
+
+            roll =  limit(roll_cmd, -15*(math.pi/180), +15*(math.pi/180))
+            pitch = limit(pitch_cmd, -15*(math.pi/180), +15*(math.pi/180))
+
+            rpy_cmd = Vector3()
+            cmd_z_thrust = Float64()
+
+            rpy_cmd.x = roll
+            rpy_cmd.y = pitch
+
+            # Compensate for g and clip thrust
+            cmd_z_thrust.data = limit(thrust + 2 * 9.81, -30+2*9.81, 30+2*9.81)
+
+            rospy.logdebug('roll:{}, pitch:{}, z_thrust:{}'.format(roll, pitch, thrust))
+            self.cmd_attitude_pub_.publish(rpy_cmd)
+            self.cmd_z_thrust_pub_.publish(cmd_z_thrust)
+        else:
+            self.counter += 1
+
+if __name__ == '__main__':
+    rospy.init_node('position_controller')
+    try:
+        ac = PositionControllerNode()
+        rospy.spin()
+    except rospy.ROSInterruptException:
+        pass
