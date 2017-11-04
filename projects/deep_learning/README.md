@@ -1,6 +1,7 @@
 [//]: # (Image References)
 [quad_following_1]: ./misc/quad_following_1.png
 [quad_following_2]: ./misc/quad_following_2.png
+[fcn_architecture]: ./misc/fcn_architecture.png
 [following_target_1]: ./misc/following_target_1.png
 [following_target_2]: ./misc/following_target_2.png
 [no_target_1]: ./misc/no_target_1.png
@@ -33,15 +34,17 @@ View the research Jupyter Notebook [here](RoboND-DeepLearning-Project/code/model
 
 ## Architecture
 
-A fully convolutional network (FCN) was used in this project because the model required both the performance of a CNN and the preservation of spatial information throughout the network.
+The project requires a model that is able to segment objects within the video stream. This means that each pixel in the image needs to be labeled. Fully convolutional networks (FCNs) are able to perform this in a process called semantic segmentation. Not only is the output the same size as the original input image, but each pixel in the output image is colored one of N segmentation colors.
+
+By using semantic segmentation, FCNs are able to preserve spatial information throughout the network.
 
 ### Fully Convolutional Networks
 
-CNNs and FCNs both have an encoder section compromised of regular convolutions, however, instead of a final fully connected layer, FCNs have a 1x1 convolution layer and a decoder section.
+CNNs and FCNs both have an encoder section compromised of regular convolutions, however, instead of a final fully connected layer, FCNs have a 1x1 convolution layer and a decoder section made of reversed convolution layers. This means the FCNs are assembled with all layers being convolutional layers.
 
 #### 1x1 Convolution Layer
 
-By using a 1x1 convolution layer, the network is able to retain spatial information from the encoder. When using a fully connected layer, the data is flattened, retaining only 2 dimensions of information, as opposed to 4 of the 1x1 convolution layer.
+By using a 1x1 convolution layer, the network is able to retain spatial information from the encoder. When using a fully connected layer, the data is flattened, retaining only 2 dimensions of information. Flattening the data like this is useful for classification, however, the model needs to be able to classify each pixel in the image, which is were FCNs shine.
 
 The 1x1 convolution layer is simply a regular convolution, with a kernel and stride of 1.
 
@@ -61,7 +64,7 @@ Skip connections allow the network to retain information from prior layers that 
 
 ### Model Used
 
-TODO: Add image of the model
+![fcn model architecture used][fcn_architecture]
 
 The actual FCN model consists of two encoder layers, the 1x1 convolution layer, and two decoder block layers.
 
@@ -140,3 +143,7 @@ Training the model on new objects would require a large collection of training a
 To view the instructions for running the model, read [this](RoboND-DeepLearning-Project/README.md).
 
 You can access the Jupyter Notebook I used to train the model [here](RoboND-DeepLearning-Project/code/model_training.ipynb).
+
+## Sources
+
+[Literature Review: Fully Convolutional Networks - David Silver (Medium)](https://medium.com/self-driving-cars/literature-review-fully-convolutional-networks-d0a11fe0a7aa)
