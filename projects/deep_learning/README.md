@@ -1,4 +1,6 @@
 [//]: # (Image References)
+[quad_following_1]: ./misc/quad_following_1.png
+[quad_following_2]: ./misc/quad_following_2.png
 [following_target_1]: ./misc/following_target_1.png
 [following_target_2]: ./misc/following_target_2.png
 [no_target_1]: ./misc/no_target_1.png
@@ -8,7 +10,7 @@
 
 # Deep Learning Project (Follow Me)
 
-TODO: Add image from the drone simulation
+![quad following target][quad_following_1]
 
 The deep learning project, also known as the Follow Me project, uses a fully convolutional network (FCN) to build a model for identifying a target person from a simulated drone camera feed. The purpose of the model is to have the drone follow the target person as they walk around, ignoring other non-target people.
 
@@ -23,10 +25,10 @@ View the research Jupyter Notebook [here](RoboND-DeepLearning-Project/code/model
 - [Architecture](#architecture)
   - [Fully Convolutional Networks](#fully-convolutional-networks)
   - [Model Used](#model-used)
-- [Hyperparameters](#hyperparmeters)
+- [Hyperparameters](#hyperparameters)
 - [Training](#training)
 - [Performance](#performance)
-- [Future Uses](#future-uses)
+- [Future Enhancements](#future-enhancements)
 - [Research Notebook](#research-notebook)
 
 ## Architecture
@@ -73,6 +75,8 @@ The second decoder block layer uses the output from the first decoder block as t
 
 Finally, a convolution layer with softmax activation is applied to the output of the second decoder block.
 
+I found that making the model deeper resulted in worse performance and longer training times. I did this by adding both an extra convolution layer and an extra decoder block layer, each with a filter size of 256. Therefore, I stuck with a model with 2 convolutions and 2 decoder layers.
+
 ## Hyperparameters
 
 The optimal hyperparameters I found (for the time taken) are:
@@ -88,7 +92,7 @@ I found that a batch size larger than 100 overflowed either the CPU or GPU cache
 
 The more epochs trained with always increased the model accuracy, however, there is a point of diminishing returns between accuracy and time required. I found that after 10 to 20 epochs, the accuracy only improved marginally. Every time the number of epochs is doubled, the training time is also doubled. Thus, I found that 10 epochs resulted in acceptable scores for the time taken.
 
-Increasing the steps per epoch and validation only marginally increased the model accuracy, however, they drastically increased the training time. Thus it did not make sense to increase them beyond 200 and 50, respectively.
+Increasing the steps per epoch and validation only marginally increased the model accuracy, however, they drastically increased the training time. Thus it did not make sense to increase them beyond 200 and 50, respectively. Conversely, halving the values to 100 and 25, respectively, dramatically hurt the model's performance, while decreasing training time. Therefore, I stuck with 200 for the steps per epoch and 50 for the validation steps.
 
 All of these hyperparameters were evaluated by manual tuning. In the future, I will implement either a grid search or a random search to aid this process.
 
@@ -121,7 +125,11 @@ Finally, when the target was at a long distance, the model had an IoU for the ta
 
 As you can see from the long range images, the model has difficultly at long distances. Additional training images might improve it's accuracy.
 
-## Future Uses
+Ultimately though, the model was good enough that the quad had no trouble finding and following the target person in the simulated environment.
+
+![quad following target 2][quad_following_2]
+
+## Future Enhancements
 
 This model was exclusively trained on people, however, it could be altered for other object detection. For example, it could be trained on images of cars or animals. It is important to note that this would require the model to be trained from scratch. The model I trained in this project would not have good performance if it were simply given images of different objects to evaluate.
 
