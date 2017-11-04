@@ -84,12 +84,12 @@ I found that making the model deeper resulted in worse performance and longer tr
 
 The optimal hyperparameters I found (for the time taken) are:
 
-learning rate = 0.001
-batch size = 100
-number of epochs = 10
-steps per epoch = 200
-validation steps = 50
-workers = 2
+- learning rate = 0.001
+- batch size = 100
+- number of epochs = 10
+- steps per epoch = 200
+- validation steps = 50
+- workers = 2
 
 I found that a batch size larger than 100 overflowed either the CPU or GPU cache, causing the system to write the extra information to RAM, slowing the training down. This makes sense because the larger epoch size requires more space.
 
@@ -102,8 +102,6 @@ All of these hyperparameters were evaluated by manual tuning. In the future, I w
 ## Training
 
 I trained the model on AWS using a p2.xlarge instance (Nvidia K80 GPU with 4 vCPUs and 61 GB of RAM). Training the model with the above hyperparameters required about 226 seconds per epoch, or about 38 minutes for the 10 epochs I used.
-
-In the future, I am eager to experiment with the new p3 instances (Nvidia V100), which has much greater performance than the p2 (K80) instances I used.
 
 ## Performance
 
