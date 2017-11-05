@@ -42,9 +42,19 @@ By using semantic segmentation, FCNs are able to preserve spatial information th
 
 CNNs and FCNs both have an encoder section compromised of regular convolutions, however, instead of a final fully connected layer, FCNs have a 1x1 convolution layer and a decoder section made of reversed convolution layers. This means the FCNs are assembled with all layers being convolutional layers.
 
+#### Encoder
+
+The encoder section is comprised of one or more encoder blocks, each of which includes a separable convolution layer. 
+
+Separable convolution layers are a convolution technique for increasing model performance by reducing the number of parameters in each convolution. Put simply, this is achieved by performing a spatial convolution while keeping the channels separate, followed with a depthwise convolution. Instead of traversing the each input channel by each output channel and kernel, separable convolutions traverse the input channels with only the kernel, then traverse each of those feature maps with a 1x1 convolution for each output layer, before adding the two together. This technique allows for the efficient use of parameters.
+
+Each encoder layer allows the model to gain a better understanding of the shapes in the image. For example, the first layer is able to discern very basic characteristics in the image, such as lines, hues and brightness. The next layer is able to identify shapes, such as squares, circles and curves. Each subsequent layer continues to build more insight into the image. However, although each layer is able to gain a better understanding of the image, more layers increase the computation time when training the model.
+
 #### 1x1 Convolution Layer
 
-By using a 1x1 convolution layer, the network is able to retain spatial information from the encoder. When using a fully connected layer, the data is flattened, retaining only 2 dimensions of information. Flattening the data like this is useful for classification, however, the model needs to be able to classify each pixel in the image, which is were FCNs shine.
+By using a 1x1 convolution layer, the network is able to retain spatial information from the encoder. When using a fully connected layer, the data is flattened, retaining only 2 dimensions of information. Flattening the data like this is useful for classification, however, the model needs to be able to classify each pixel in the image. 1x1 convolution layers allow the network to retain this location information.
+
+An additional benefit of 1x1 convolutions is that they are an efficient approach for adding extra depth to the model.
 
 The 1x1 convolution layer is simply a regular convolution, with a kernel and stride of 1.
 
@@ -54,9 +64,11 @@ The decoder section of the model can either be composed of transposed convolutio
 
 The transposed convolution layers reverse the regular convolution layers, multiplying each pixel of the input with the kernel.
 
-Bilinear upsampling uses the weighted average of the four nearest known pixels from the given pixel, estimating the new pixel intensity value. Although bilinear upsampling loses some finer details when compared to transposed convolutions, it has much better performance, which is essential for this model.
+Bilinear upsampling uses the weighted average of the four nearest known pixels from the given pixel, estimating the new pixel intensity value. Although bilinear upsampling loses some finer details when compared to transposed convolutions, it has much better performance, which is important for training large models quickly.
 
 The decoder block calculates the separable convolution layer of the concatenated bilinear upsample of the smaller input layer with the larger input layer. This structure mimics the use of skip connections by having the larger decoder block input layer act as the skip connection.
+
+Each decoder layer is able to reconstruct a little bit more spatial resolution from the layer before it. The final decoder layer will output a layer the same size as the original model input image, which will be used for guiding the quad.
 
 #### Skip Connections
 
@@ -68,7 +80,7 @@ Skip connections allow the network to retain information from prior layers that 
 
 The actual FCN model consists of two encoder layers, the 1x1 convolution layer, and two decoder block layers.
 
-The first convolution uses a filter size of 32 and a stride of 2, while the second convolution uses a filter size of 64 and a stride of 2.
+The first convolution uses a filter size of 32 and a stride of 2, while the second convolution uses a filter size of 64 and a stride of 2. Both convolutions used same padding. This padding combined with a stride of 2 causes each layer to halve the image size, while increasing the depth to match the filter size used.
 
 The 1x1 convolution layer uses a filter size of 128, with the standard kernel and stride size of 1.
 
@@ -144,4 +156,5 @@ You can access the Jupyter Notebook I used to train the model [here](RoboND-Deep
 
 ## Sources
 
-[Literature Review: Fully Convolutional Networks - David Silver (Medium)](https://medium.com/self-driving-cars/literature-review-fully-convolutional-networks-d0a11fe0a7aa)
+- [An Introduction to different Types of Convolutions in Deep Learning - Paul-Louis Prove (Medium)](https://medium.com/towards-data-science/types-of-convolutions-in-deep-learning-717013397f4d)
+- [Literature Review: Fully Convolutional Networks - David Silver (Medium)](https://medium.com/self-driving-cars/literature-review-fully-convolutional-networks-d0a11fe0a7aa)
