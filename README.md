@@ -11,7 +11,7 @@ The scripts used to setup the Jupyter Notebook environment is also stored here. 
 #### Projects
 
 Projects I've worked on include:
-- [Search and sample return](../master/projects/search_and_sample_return)
+- [Search and sample return](https://github.com/camisatx/RoboND-Rover-Project/blob/master/README.md)
 - [Reinforcement learning](../master/projects/learning)
 - [OpenAI Gym](../master/projects/gym)
 - [Kinematics](../master/projects/kinematics/README.md)
@@ -19,6 +19,7 @@ Projects I've worked on include:
 - [Iceberg Tracker Prototype](../master/projects/Iceberg_Tracker/README.md)
 - [Perception - PR2 3D Perception Challenge](../master/projects/perception/README.md)
 - [Control](../master/projects/controls/README.md)
+- [Deep Learning](../master/projects/deep_learning/README.md)
 
 #### Notes
 
